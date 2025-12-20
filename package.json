@@ -1,0 +1,49 @@
+{
+  "name": "champius",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Champius Learning Management System - Full-stack application with NestJS backend and Next.js frontend",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/champius.git"
+  },
+  "scripts": {
+    "verify": "node verify-deployment.js",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd apps/api && npm run start:dev",
+    "dev:web": "cd apps/web && pnpm dev",
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "cd apps/api && npm install && npx prisma generate && npm run build",
+    "build:web": "cd apps/web && pnpm install && pnpm build",
+    "start": "concurrently \"npm run start:api\" \"npm run start:web\"",
+    "start:api": "cd apps/api && npm run start:prod",
+    "start:web": "cd apps/web && pnpm start",
+    "prisma:generate": "cd apps/api && npx prisma generate",
+    "prisma:migrate": "cd apps/api && npx prisma migrate deploy",
+    "prisma:studio": "cd apps/api && npx prisma studio",
+    "lint": "npm run lint:api && npm run lint:web",
+    "lint:api": "cd apps/api && npm run lint",
+    "lint:web": "cd apps/web && pnpm lint"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "keywords": [
+    "lms",
+    "learning-management-system",
+    "education",
+    "nestjs",
+    "nextjs",
+    "prisma",
+    "postgresql"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

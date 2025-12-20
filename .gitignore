@@ -1,0 +1,33 @@
+apps/api/.env
+apps/api/.env.local
+apps/api/.env.production
+apps/web/.env
+apps/web/.env.local
+apps/web/.env.production
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+temp/
+*.tmp

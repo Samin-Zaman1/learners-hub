@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -15,9 +16,14 @@ import { StudentModule } from './student/student.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'changeme',
-      signOptions: { expiresIn: '1d' },
+      secret: process.env.JWT_SECRET || 'changeme-in-production',
+      signOptions: { expiresIn: '7d' },
+      global: true,
     }),
     DashboardModule,
     InstructorModule,

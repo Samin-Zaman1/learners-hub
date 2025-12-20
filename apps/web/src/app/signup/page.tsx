@@ -50,7 +50,8 @@ export default function SignupPage() {
     setLoading(true);
     setMsg('');
     try {
-      const res = await axios.post('http://localhost:4000/auth/signup', { 
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const res = await axios.post(`${apiUrl}/auth/signup`, { 
         email, 
         password,
         role 

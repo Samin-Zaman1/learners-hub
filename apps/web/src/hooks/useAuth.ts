@@ -43,7 +43,8 @@ export const useAuth = () => {
         }
 
         // Verify token with backend
-        const response = await axios.get('http://localhost:4000/auth/me', {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const response = await axios.get(`${apiUrl}/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

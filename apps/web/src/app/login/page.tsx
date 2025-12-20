@@ -41,7 +41,8 @@ export default function LoginPage() {
     setMsg('');
     try {
       // Login without role - let backend auto-detect from database
-      const res = await axios.post('http://localhost:4000/auth/login', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const res = await axios.post(`${apiUrl}/auth/login`, {
         email,
         password,
       });

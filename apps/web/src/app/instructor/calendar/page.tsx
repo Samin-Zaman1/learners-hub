@@ -64,19 +64,12 @@ export default function InstructorCalendar() {
     setCurrentDate(new Date());
   }, []);
 
-  // Return loading state if not mounted yet
-  if (!mounted || !currentDate) {
-    return (
-      <DashboardLayout>
-        <Box sx={{ p: 3 }}>
-          <Typography>Loading calendar...</Typography>
-        </Box>
-      </DashboardLayout>
-    );
-  }
+  // Hooks must run on every render, so use a placeholder date until mounted
+  const ready = mounted && currentDate !== null;
+  const activeDate = currentDate ?? new Date(0);
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
+  const year = activeDate.getFullYear();
+  const month = activeDate.getMonth() + 1;
 
   // Get start of week for weekly view
   const getWeekStart = (date: Date) => {
@@ -86,7 +79,7 @@ export default function InstructorCalendar() {
     return new Date(d.setDate(diff));
   };
 
-  const weekStart = getWeekStart(currentDate);
+  const weekStart = getWeekStart(activeDate);
 
   // Fetch calendar data based on view mode
   const { data: monthData, isLoading: loadingMonth } = useQuery({
@@ -95,7 +88,7 @@ export default function InstructorCalendar() {
       const response = await api.get(`/instructor/calendar/monthly/${year}/${month}`);
       return response.data;
     },
-    enabled: viewMode === 'month'
+    enabled: ready && viewMode === 'month'
   });
 
   const { data: weekData, isLoading: loadingWeek } = useQuery({
@@ -104,16 +97,16 @@ export default function InstructorCalendar() {
       const response = await api.get(`/instructor/calendar/weekly?startDate=${weekStart.toISOString()}`);
       return response.data;
     },
-    enabled: viewMode === 'week'
+    enabled: ready && viewMode === 'week'
   });
 
   const { data: dayData, isLoading: loadingDay } = useQuery({
-    queryKey: ['instructor', 'calendar', 'day', currentDate.toISOString().split('T')[0]],
+    queryKey: ['instructor', 'calendar', 'day', activeDate.toISOString().split('T')[0]],
     queryFn: async () => {
-      const response = await api.get(`/instructor/calendar/daily/${currentDate.toISOString().split('T')[0]}`);
+      const response = await api.get(`/instructor/calendar/daily/${activeDate.toISOString().split('T')[0]}`);
       return response.data;
     },
-    enabled: viewMode === 'day'
+    enabled: ready && viewMode === 'day'
   });
 
   const { data: calendarStats } = useQuery({
@@ -121,8 +114,20 @@ export default function InstructorCalendar() {
     queryFn: async () => {
       const response = await api.get('/instructor/calendar/stats');
       return response.data;
-    }
+    },
+    enabled: ready
   });
+
+  // Return loading state if not mounted yet
+  if (!ready || !currentDate) {
+    return (
+      <DashboardLayout>
+        <Box sx={{ p: 3 }}>
+          <Typography>Loading calendar...</Typography>
+        </Box>
+      </DashboardLayout>
+    );
+  }
 
   const isLoading = loadingMonth || loadingWeek || loadingDay;
 

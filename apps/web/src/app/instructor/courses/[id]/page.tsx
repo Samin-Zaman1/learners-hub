@@ -65,7 +65,7 @@ interface Course {
   description: string;
   category: string;
   tags: string[];
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status: 'DRAFT' | 'ASSIGNED' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
   enrolledStudents: number;
   totalModules: number;
   totalMaterials: number;
@@ -165,13 +165,13 @@ export default function InstructorCourseDetail({ params }: { params: { id: strin
     }
   });
 
-  // Publish course mutation
+  // Publish course to students mutation
   const publishCourseMutation = useMutation({
-    mutationFn: () => apiClient.post(`/instructor/courses/${params.id}/publish`),
+    mutationFn: () => apiClient.patch(`/instructor/courses/${params.id}/publish`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['instructor-course', params.id] });
       queryClient.invalidateQueries({ queryKey: ['instructor-courses'] });
-      setSnackbarMessage('Course published successfully!');
+      setSnackbarMessage('Course published to students successfully!');
       setPublishDialogOpen(false);
     },
     onError: (error: any) => {
@@ -346,9 +346,7 @@ export default function InstructorCourseDetail({ params }: { params: { id: strin
   };
 
   const handlePublishCourse = () => {
-    if (course?.status === 'PUBLISHED') {
-      unpublishCourseMutation.mutate();
-    } else {
+    if (course?.status === 'ASSIGNED') {
       publishCourseMutation.mutate();
     }
     setPublishDialogOpen(false);
@@ -356,10 +354,13 @@ export default function InstructorCourseDetail({ params }: { params: { id: strin
 
   const getStatusColor = (status: Course['status']) => {
     switch (status) {
-      case 'PUBLISHED':
+      case 'ACTIVE':
         return 'success';
+      case 'ASSIGNED':
+        return 'info';
       case 'DRAFT':
         return 'warning';
+      case 'COMPLETED':
       case 'ARCHIVED':
         return 'default';
       default:
@@ -369,10 +370,13 @@ export default function InstructorCourseDetail({ params }: { params: { id: strin
 
   const getStatusIcon = (status: Course['status']) => {
     switch (status) {
-      case 'PUBLISHED':
+      case 'ACTIVE':
         return <Publish />;
+      case 'ASSIGNED':
+        return <Class />;
       case 'DRAFT':
         return <Draft />;
+      case 'COMPLETED':
       case 'ARCHIVED':
         return <Archive />;
       default:
@@ -438,14 +442,22 @@ export default function InstructorCourseDetail({ params }: { params: { id: strin
             >
               Edit
             </Button>
-            {course.status === 'DRAFT' && (
+            {course.status === 'ASSIGNED' && (
               <Button
                 variant="contained"
                 startIcon={<Publish />}
                 onClick={() => setPublishDialogOpen(true)}
+                color="success"
               >
-                Publish
+                Publish to Students
               </Button>
+            )}
+            {course.status === 'DRAFT' && (
+              <Chip 
+                label="Waiting for Admin Approval" 
+                color="warning" 
+                size="small"
+              />
             )}
             <IconButton onClick={handleMenuClick}>
               <MoreVert />

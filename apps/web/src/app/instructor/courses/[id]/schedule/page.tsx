@@ -24,9 +24,19 @@ import {
   Stack,
   TextField,
   Typography,
-  Alert
+  Alert,
+  Snackbar,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Event as EventIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Event as EventIcon,
+  Save as SaveIcon,
+  ViewList as TemplatesIcon
+} from '@mui/icons-material';
 import { api } from '@/lib/api';
 
 interface ScheduleEvent {
@@ -63,6 +73,13 @@ export default function InstructorSchedulePage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [templateForm, setTemplateForm] = useState({
+    name: '',
+    description: '',
+    isPublic: false
+  });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [form, setForm] = useState<ScheduleForm>({
     title: '',
     type: 'lecture',
@@ -126,6 +143,22 @@ export default function InstructorSchedulePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', courseId, 'schedule'] });
+    }
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await api.post(`/instructor/courses/${courseId}/schedule/save-template`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'schedule-templates'] });
+      setSaveTemplateDialogOpen(false);
+      setSnackbar({ open: true, message: 'Schedule saved as template successfully!', severity: 'success' });
+      setTemplateForm({ name: '', description: '', isPublic: false });
+    },
+    onError: (err: any) => {
+      setSnackbar({ open: true, message: err.response?.data?.message || 'Failed to save template', severity: 'error' });
     }
   });
 
@@ -199,6 +232,14 @@ export default function InstructorSchedulePage() {
     }
   };
 
+  const handleSaveAsTemplate = () => {
+    if (!templateForm.name) {
+      setSnackbar({ open: true, message: 'Template name is required', severity: 'error' });
+      return;
+    }
+    saveTemplateMutation.mutate(templateForm);
+  };
+
   const getDayName = (dayNum: number | null) => {
     if (dayNum === null) return '';
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -236,13 +277,31 @@ export default function InstructorSchedulePage() {
               {course?.title} ({course?.code})
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={openCreateDialog}
-          >
-            Add Event
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              startIcon={<TemplatesIcon />}
+              onClick={() => router.push('/instructor/schedule-templates')}
+            >
+              Templates
+            </Button>
+            {scheduleEvents && scheduleEvents.length > 0 && (
+              <Button
+                variant="outlined"
+                startIcon={<SaveIcon />}
+                onClick={() => setSaveTemplateDialogOpen(true)}
+              >
+                Save as Template
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={openCreateDialog}
+            >
+              Add Event
+            </Button>
+          </Stack>
         </Box>
 
         {/* Schedule Events */}
@@ -451,6 +510,65 @@ export default function InstructorSchedulePage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Save as Template Dialog */}
+      <Dialog open={saveTemplateDialogOpen} onClose={() => setSaveTemplateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Save Schedule as Template</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Alert severity="info">
+              This will save your current schedule ({scheduleEvents?.length || 0} events) as a reusable template.
+            </Alert>
+            <TextField
+              label="Template Name"
+              required
+              fullWidth
+              value={templateForm.name}
+              onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
+              placeholder="e.g., Standard MWF Schedule"
+            />
+            <TextField
+              label="Description"
+              fullWidth
+              multiline
+              rows={3}
+              value={templateForm.description}
+              onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
+              placeholder="Describe this schedule template..."
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={templateForm.isPublic}
+                  onChange={(e) => setTemplateForm({ ...templateForm, isPublic: e.target.checked })}
+                />
+              }
+              label="Make this template public (visible to all instructors)"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSaveTemplateDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleSaveAsTemplate}
+            variant="contained"
+            disabled={saveTemplateMutation.isPending || !templateForm.name}
+          >
+            {saveTemplateMutation.isPending ? 'Saving...' : 'Save Template'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

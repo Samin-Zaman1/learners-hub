@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Button,
@@ -14,9 +15,28 @@ import {
   Stack,
   Typography,
   IconButton,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  Snackbar
 } from '@mui/material';
-import { Add as AddIcon, Visibility as ViewIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import {
+  Add as AddIcon,
+  Visibility as ViewIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  ContentCopy as DuplicateIcon,
+  PlaylistAdd as BulkAddIcon,
+  Assessment as GradeIcon
+} from '@mui/icons-material';
 import { api } from '@/lib/api';
 
 interface Task {
@@ -41,7 +61,23 @@ interface Task {
 export default function InstructorTasksPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const courseId = params.id as string;
+
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [newDueDate, setNewDueDate] = useState('');
+  const [bulkTasks, setBulkTasks] = useState([{
+    title: '',
+    description: '',
+    type: 'assignment',
+    priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH',
+    dueDate: '',
+    dueTime: '',
+    maxPoints: ''
+  }]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   const { data: tasks, isLoading } = useQuery<Task[]>({
     queryKey: ['instructor', 'courses', courseId, 'tasks'],
@@ -99,6 +135,101 @@ export default function InstructorTasksPage() {
     return timeString ? `${dateStr} at ${timeString}` : dateStr;
   };
 
+  const duplicateMutation = useMutation({
+    mutationFn: async ({ taskId, dueDate }: { taskId: string; dueDate?: string }) => {
+      const response = await api.post(`/instructor/courses/${courseId}/tasks/${taskId}/duplicate`, {
+        newDueDate: dueDate || undefined
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', courseId, 'tasks'] });
+      setDuplicateDialogOpen(false);
+      setSnackbar({ open: true, message: 'Task duplicated successfully', severity: 'success' });
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Failed to duplicate task', severity: 'error' });
+    }
+  });
+
+  const bulkCreateMutation = useMutation({
+    mutationFn: async (tasksData: any[]) => {
+      const response = await api.post(`/instructor/courses/${courseId}/tasks/bulk`, { tasks: tasksData });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['instructor', 'courses', courseId, 'tasks'] });
+      setBulkDialogOpen(false);
+      setBulkTasks([{
+        title: '',
+        description: '',
+        type: 'assignment',
+        priority: 'MEDIUM',
+        dueDate: '',
+        dueTime: '',
+        maxPoints: ''
+      }]);
+      setSnackbar({ open: true, message: `${data.length} tasks created successfully`, severity: 'success' });
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Failed to create tasks', severity: 'error' });
+    }
+  });
+
+  const handleDuplicate = (task: Task) => {
+    setSelectedTask(task);
+    setNewDueDate('');
+    setDuplicateDialogOpen(true);
+  };
+
+  const handleDuplicateSubmit = () => {
+    if (selectedTask) {
+      duplicateMutation.mutate({ taskId: selectedTask.id, dueDate: newDueDate });
+    }
+  };
+
+  const handleAddBulkTask = () => {
+    setBulkTasks([...bulkTasks, {
+      title: '',
+      description: '',
+      type: 'assignment',
+      priority: 'MEDIUM',
+      dueDate: '',
+      dueTime: '',
+      maxPoints: ''
+    }]);
+  };
+
+  const handleRemoveBulkTask = (index: number) => {
+    setBulkTasks(bulkTasks.filter((_, i) => i !== index));
+  };
+
+  const handleBulkTaskChange = (index: number, field: string, value: any) => {
+    const updated = [...bulkTasks];
+    updated[index] = { ...updated[index], [field]: value };
+    setBulkTasks(updated);
+  };
+
+  const handleBulkSubmit = () => {
+    const validTasks = bulkTasks.filter(t => t.title && t.dueDate);
+    if (validTasks.length === 0) {
+      setSnackbar({ open: true, message: 'At least one task must have a title and due date', severity: 'error' });
+      return;
+    }
+
+    const tasksData = validTasks.map(t => ({
+      title: t.title,
+      description: t.description || undefined,
+      type: t.type,
+      priority: t.priority,
+      dueDate: t.dueDate,
+      dueTime: t.dueTime || undefined,
+      maxPoints: t.maxPoints ? parseInt(t.maxPoints) : undefined
+    }));
+
+    bulkCreateMutation.mutate(tasksData);
+  };
+
   if (isLoading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -120,13 +251,29 @@ export default function InstructorTasksPage() {
               {course?.title} ({course?.code})
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => router.push(`/instructor/courses/${courseId}/tasks/create`)}
-          >
-            Create Task
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              startIcon={<BulkAddIcon />}
+              onClick={() => setBulkDialogOpen(true)}
+            >
+              Bulk Create
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<GradeIcon />}
+              onClick={() => router.push(`/instructor/courses/${courseId}/submissions`)}
+            >
+              View All Submissions
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => router.push(`/instructor/courses/${courseId}/tasks/create`)}
+            >
+              Create Task
+            </Button>
+          </Stack>
         </Box>
 
         {/* Statistics */}
@@ -252,6 +399,14 @@ export default function InstructorTasksPage() {
 
                     <Box sx={{ flex: { md: '0 0 auto' } }}>
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <Tooltip title="Duplicate Task">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDuplicate(task)}
+                          >
+                            <DuplicateIcon />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="View Submissions">
                           <IconButton
                             size="small"
@@ -269,6 +424,159 @@ export default function InstructorTasksPage() {
           </Stack>
         )}
       </Stack>
+
+      {/* Duplicate Task Dialog */}
+      <Dialog open={duplicateDialogOpen} onClose={() => setDuplicateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Duplicate Task</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {selectedTask && (
+              <Alert severity="info">
+                Duplicating: <strong>{selectedTask.title}</strong>
+              </Alert>
+            )}
+            <TextField
+              label="New Due Date (Optional)"
+              type="date"
+              fullWidth
+              value={newDueDate}
+              onChange={(e) => setNewDueDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              helperText="Leave empty to keep the original due date"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDuplicateDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleDuplicateSubmit}
+            variant="contained"
+            disabled={duplicateMutation.isPending}
+          >
+            {duplicateMutation.isPending ? 'Duplicating...' : 'Duplicate'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Bulk Create Tasks Dialog */}
+      <Dialog open={bulkDialogOpen} onClose={() => setBulkDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Bulk Create Tasks</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            {bulkTasks.map((task, index) => (
+              <Card key={index} variant="outlined">
+                <CardContent>
+                  <Stack spacing={2}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography variant="subtitle2">Task {index + 1}</Typography>
+                      {bulkTasks.length > 1 && (
+                        <IconButton size="small" onClick={() => handleRemoveBulkTask(index)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Box>
+                    <TextField
+                      label="Title *"
+                      fullWidth
+                      value={task.title}
+                      onChange={(e) => handleBulkTaskChange(index, 'title', e.target.value)}
+                    />
+                    <TextField
+                      label="Description"
+                      fullWidth
+                      multiline
+                      rows={2}
+                      value={task.description}
+                      onChange={(e) => handleBulkTaskChange(index, 'description', e.target.value)}
+                    />
+                    <Box display="flex" gap={2}>
+                      <FormControl fullWidth>
+                        <InputLabel>Type</InputLabel>
+                        <Select
+                          value={task.type}
+                          label="Type"
+                          onChange={(e) => handleBulkTaskChange(index, 'type', e.target.value)}
+                        >
+                          <MenuItem value="assignment">Assignment</MenuItem>
+                          <MenuItem value="quiz">Quiz</MenuItem>
+                          <MenuItem value="exam">Exam</MenuItem>
+                          <MenuItem value="project">Project</MenuItem>
+                          <MenuItem value="reading">Reading</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <FormControl fullWidth>
+                        <InputLabel>Priority</InputLabel>
+                        <Select
+                          value={task.priority}
+                          label="Priority"
+                          onChange={(e) => handleBulkTaskChange(index, 'priority', e.target.value)}
+                        >
+                          <MenuItem value="LOW">Low</MenuItem>
+                          <MenuItem value="MEDIUM">Medium</MenuItem>
+                          <MenuItem value="HIGH">High</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                    <Box display="flex" gap={2}>
+                      <TextField
+                        label="Due Date *"
+                        type="date"
+                        fullWidth
+                        value={task.dueDate}
+                        onChange={(e) => handleBulkTaskChange(index, 'dueDate', e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                      <TextField
+                        label="Due Time"
+                        type="time"
+                        fullWidth
+                        value={task.dueTime}
+                        onChange={(e) => handleBulkTaskChange(index, 'dueTime', e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+                    <TextField
+                      label="Max Points"
+                      type="number"
+                      fullWidth
+                      value={task.maxPoints}
+                      onChange={(e) => handleBulkTaskChange(index, 'maxPoints', e.target.value)}
+                    />
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))}
+            <Button
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={handleAddBulkTask}
+            >
+              Add Another Task
+            </Button>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleBulkSubmit}
+            variant="contained"
+            disabled={bulkCreateMutation.isPending}
+          >
+            {bulkCreateMutation.isPending ? 'Creating...' : `Create ${bulkTasks.filter(t => t.title && t.dueDate).length} Tasks`}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

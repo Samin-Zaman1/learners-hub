@@ -132,7 +132,7 @@ export default function SemesterPage() {
 
           {/* Semesters Accordion */}
           <Box sx={{ mb: 3 }}>
-            {(semesters as unknown as Array<{ enrollments: Array<{ status: string }> }>)?.map((semester, index) => {
+            {(semesters as any)?.map((semester: any, index: number) => {
               const semesterName = `Semester ${String(index + 1).padStart(2, '0')}`;
               
               return (
@@ -202,13 +202,13 @@ export default function SemesterPage() {
                         Enrolled Courses
                       </Typography>
                       <Typography variant="body2" color="success.main" fontWeight="600" sx={{ fontSize: '0.875rem' }}>
-                        Completed {semester.enrollments.filter((e: { status: string }) => e.status === 'COMPLETED').length}/{semester.enrollments.length}
+                        Completed {semester.enrollments.filter((e: any) => e.status === 'COMPLETED').length}/{semester.enrollments.length}
                       </Typography>
                     </Box>
 
                     {/* Course Cards Grid - 2 per row */}
                     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2.5 }}>
-                      {semester.enrollments.map((enrollment: { status: string }) => (
+                      {semester.enrollments.map((enrollment: any) => (
                         <Card 
                           key={enrollment.enrollmentId}
                           sx={{ 
@@ -325,7 +325,7 @@ export default function SemesterPage() {
                                 }}>
                                   <Typography sx={{ fontSize: '1rem' }}>👥</Typography>
                                   <Typography sx={{ fontSize: '0.875rem', color: '#065f46', fontWeight: 600 }}>
-                                    {enrollment.course.credits * 10 || 22}
+                                    {enrollment.course._count?.Enrollment || enrollment.course.enrollmentCount || '-'}
                                   </Typography>
                                 </Box>
                               </Box>
@@ -364,19 +364,19 @@ export default function SemesterPage() {
           </Box>
 
           {/* Available Courses */}
-          {availableCourses && (availableCourses as unknown as Array<{ name: string }>).length > 0 && (
+          {availableCourses && (availableCourses as unknown as Array<any>).length > 0 && (
             <Box sx={{ mb: 4 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
                 <Typography variant="h6" fontWeight="700" sx={{ fontSize: '1rem' }}>
                   Available Courses
                 </Typography>
                 <Typography variant="body2" color="primary.main" fontWeight="600" sx={{ fontSize: '0.875rem' }}>
-                  {(availableCourses as unknown as Array<{ name: string }>).length.toString().padStart(2, '0')} Courses
+                  {(availableCourses as unknown as Array<any>).length.toString().padStart(2, '0')} Courses
                 </Typography>
               </Box>
 
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2.5 }}>
-                {(availableCourses as unknown as Array<{ name: string }>).slice(0, 4).map((course: { name: string }) => (
+                {(availableCourses as unknown as Array<any>).slice(0, 4).map((course: any) => (
                   <Box key={course.id}>
                     <Card 
                       sx={{ 
@@ -417,10 +417,10 @@ export default function SemesterPage() {
                             sx={{ width: 20, height: 20, fontSize: '0.625rem' }}
                             src={course.instructor?.avatar}
                           >
-                            {formatInstructorName(course.instructor).charAt(0)}
+                            {course.instructor ? formatInstructorName(course.instructor).charAt(0) : '?'}
                           </Avatar>
                           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                            with <span style={{ fontWeight: 500 }}>👤 {formatInstructorName(course.instructor)}</span>
+                            with <span style={{ fontWeight: 500 }}>👤 {course.instructor ? formatInstructorName(course.instructor) : 'TBA'}</span>
                           </Typography>
                         </Box>
                         
@@ -464,7 +464,7 @@ export default function SemesterPage() {
                             border: '1px solid #dcfce7'
                           }}>
                             <Typography sx={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>
-                              📊 {course.credits * 10 || 22}
+                              📊 {course._count?.Enrollment || course.enrollmentCount || '-'}
                             </Typography>
                           </Box>
                         </Box>
@@ -477,7 +477,7 @@ export default function SemesterPage() {
           )}
 
           {/* Upcoming Tasks */}
-          {upcomingTasks && (upcomingTasks as unknown as Array<{ dueDate: string }>).length > 0 && (
+          {upcomingTasks && (upcomingTasks as unknown as Array<any>).length > 0 && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" fontWeight="bold">
@@ -488,13 +488,13 @@ export default function SemesterPage() {
                     pending task
                   </Typography>
                   <Typography variant="caption" color="error.main" fontWeight="bold">
-                    {(upcomingTasks as unknown as Array<{ dueDate: string }>)[0] ? formatTimeRemaining((upcomingTasks as unknown as Array<{ dueDate: string }>)[0].dueDate) : ''}
+                    {(upcomingTasks as unknown as Array<any>)[0] ? formatTimeRemaining((upcomingTasks as unknown as Array<any>)[0].dueDate) : ''}
                   </Typography>
                 </Box>
               </Box>
 
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2 }}>
-                {(upcomingTasks as unknown as Array<{ dueDate: string }>).slice(0, 3).map((task: { dueDate: string }) => (
+                {(upcomingTasks as unknown as Array<any>).slice(0, 3).map((task: any) => (
                   <Box key={task.id}>
                     <Card>
                       <CardContent>
@@ -703,13 +703,13 @@ export default function SemesterPage() {
                 </Typography>
 
                 <Stack spacing={2.5}>
-                  {((statistics as unknown as { faculties?: Array<unknown> })?.faculties || [{ 
+                  {((statistics as any)?.faculties || [{ 
                     id: 1, 
                     name: 'David Miller',
                     department: 'Computer Science & Engineering',
                     university: 'Northeastern University',
                     role: 'Department Head'
-                  }]).map((faculty: unknown) => (
+                  }]).map((faculty: any) => (
                     <Box key={faculty.id} sx={{ display: 'flex', gap: 1.5 }}>
                       <Avatar 
                         sx={{ 

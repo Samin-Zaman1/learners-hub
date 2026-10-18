@@ -42,7 +42,7 @@ export class InstructorAnnouncementService {
     const announcement = await this.prisma.announcement.create({
       data: {
         courseId,
-        author: instructorId,
+        createdBy: instructorId,
         title: createDto.title,
         content: createDto.content,
         type: createDto.type || 'GENERAL',

@@ -166,6 +166,57 @@ export class InstructorCourseService {
     });
   }
 
+  async publishToStudents(courseId: string, instructorId: string) {
+    // Verify course ownership
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        instructorId: true,
+      }
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenException('Access denied to this course');
+    }
+
+    if (course.status !== 'ASSIGNED') {
+      throw new BadRequestException(
+        'Only courses assigned by admin (ASSIGNED status) can be published to students'
+      );
+    }
+
+    // Update course status to ACTIVE
+    const updatedCourse = await this.prisma.course.update({
+      where: { id: courseId },
+      data: {
+        status: 'ACTIVE' as any,
+        updatedAt: new Date(),
+      },
+      include: {
+        _count: {
+          select: {
+            Enrollment: true,
+            Task: true,
+            Announcement: true
+          }
+        }
+      }
+    });
+
+    return {
+      success: true,
+      message: `Course "${course.title}" is now active and visible to enrolled students`,
+      course: updatedCourse
+    };
+  }
+
   async inviteStudent(courseId: string, instructorId: string, studentEmail: string) {
     // Verify course ownership
     await this.getCourseById(courseId, instructorId);

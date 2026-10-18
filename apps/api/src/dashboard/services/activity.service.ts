@@ -324,12 +324,12 @@ export class ActivityService {
           this.prisma.taskSubmission.findMany({
             where: {
               studentId: userId,
-              Task: {
+              task: {
                 courseId: { in: courseIds }
               }
             },
             include: {
-              Task: true
+              task: true
             }
           }),
           this.prisma.scheduleEvent.findMany({

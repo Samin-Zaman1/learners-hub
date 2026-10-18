@@ -45,7 +45,6 @@ export class InstructorTaskService {
     // Create the task
     const task = await this.prisma.task.create({
       data: {
-        userId: instructorId,
         courseId,
         createdBy: instructorId,
         title: createTaskDto.title,
@@ -53,7 +52,7 @@ export class InstructorTaskService {
         dueDate: new Date(createTaskDto.dueDate),
         dueTime: createTaskDto.dueTime,
         type: createTaskDto.type,
-        priority: createTaskDto.priority,
+        priority: createTaskDto.priority || 'MEDIUM',
         maxPoints: createTaskDto.maxPoints,
         estimatedTime: createTaskDto.estimatedTime,
         updatedAt: new Date()
@@ -107,14 +106,15 @@ export class InstructorTaskService {
     const tasks = await this.prisma.task.findMany({
       where: { courseId },
       include: {
-        TaskSubmission: {
+        submissions: {
           select: {
-            status: true
+            status: true,
+            points: true
           }
         },
         _count: {
           select: {
-            TaskSubmission: true
+            submissions: true
           }
         }
       },
@@ -123,11 +123,11 @@ export class InstructorTaskService {
 
     // Calculate statistics for each task
     return tasks.map(task => {
-      const totalSubmissions = task.TaskSubmission.length;
-      const pendingCount = task.TaskSubmission.filter(s => s.status === 'PENDING').length;
-      const inProgressCount = task.TaskSubmission.filter(s => s.status === 'IN_PROGRESS').length;
-      const completedCount = task.TaskSubmission.filter(s => s.status === 'COMPLETED').length;
-      const gradedCount = task.TaskSubmission.filter(s => s.status === 'GRADED').length;
+      const totalSubmissions = task.submissions.length;
+      const pendingCount = task.submissions.filter(s => s.status === 'PENDING').length;
+      const inProgressCount = task.submissions.filter(s => s.status === 'IN_PROGRESS').length;
+      const completedCount = task.submissions.filter(s => s.status === 'COMPLETED').length;
+      const gradedCount = task.submissions.filter(s => s.status === 'COMPLETED' && s.points !== null).length;
 
       return {
         id: task.id,
@@ -219,7 +219,7 @@ export class InstructorTaskService {
     const submissions = await this.prisma.taskSubmission.findMany({
       where: { taskId },
       include: {
-        Student: {
+        student: {
           select: {
             id: true,
             email: true,
@@ -234,11 +234,11 @@ export class InstructorTaskService {
     return submissions.map(submission => ({
       id: submission.id,
       student: {
-        id: submission.Student.id,
-        email: submission.Student.email,
-        name: submission.Student.firstName && submission.Student.lastName
-          ? `${submission.Student.firstName} ${submission.Student.lastName}`
-          : submission.Student.email
+        id: submission.student.id,
+        email: submission.student.email,
+        name: submission.student.firstName && submission.student.lastName
+          ? `${submission.student.firstName} ${submission.student.lastName}`
+          : submission.student.email
       },
       status: submission.status,
       points: submission.points,
@@ -285,7 +285,7 @@ export class InstructorTaskService {
     const submission = await this.prisma.taskSubmission.findUnique({
       where: { id: submissionId },
       include: {
-        Student: {
+        student: {
           select: {
             id: true,
             email: true
@@ -320,7 +320,7 @@ export class InstructorTaskService {
     // Create activity record for the student
     await this.prisma.activity.create({
       data: {
-        userId: submission.Student.id,
+        userId: submission.student.id,
         courseId: courseId,
         type: 'GRADE',
         title: `Graded: ${task.title}`,
@@ -412,6 +412,271 @@ export class InstructorTaskService {
 
     return {
       message: 'Task deleted successfully'
+    };
+  }
+
+  /**
+   * Get all submissions across all tasks in a course for grading interface
+   */
+  async getAllCourseSubmissions(instructorId: string, courseId: string, filters?: {
+    taskId?: string;
+    status?: string;
+    studentId?: string;
+  }) {
+    // Verify instructor owns the course
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId }
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+
+    // Build where clause
+    const where: any = {
+      task: {
+        courseId
+      }
+    };
+
+    if (filters?.taskId) {
+      where.taskId = filters.taskId;
+    }
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.studentId) {
+      where.studentId = filters.studentId;
+    }
+
+    // Get submissions
+    const submissions = await this.prisma.taskSubmission.findMany({
+      where,
+      include: {
+        task: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            maxPoints: true,
+            dueDate: true
+          }
+        },
+        student: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      },
+      orderBy: [
+        { task: { dueDate: 'desc' } },
+        { student: { lastName: 'asc' } }
+      ]
+    });
+
+    return submissions;
+  }
+
+  /**
+   * Bulk grade multiple submissions
+   */
+  async bulkGradeSubmissions(
+    instructorId: string,
+    courseId: string,
+    taskId: string,
+    grades: Array<{ submissionId: string; points?: number; feedback?: string }>
+  ) {
+    // Verify instructor owns the course
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId }
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+
+    // Verify task belongs to course
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId }
+    });
+
+    if (!task || task.courseId !== courseId) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Update all submissions
+    const results = await Promise.all(
+      grades.map(grade =>
+        this.prisma.taskSubmission.update({
+          where: { id: grade.submissionId },
+          data: {
+            points: grade.points,
+            feedback: grade.feedback,
+            status: 'GRADED' as any,
+            updatedAt: new Date()
+          }
+        })
+      )
+    );
+
+    return {
+      graded: results.length,
+      message: `Successfully graded ${results.length} submissions`
+    };
+  }
+
+  /**
+   * Create multiple tasks at once (bulk creation)
+   */
+  async bulkCreateTasks(
+    instructorId: string,
+    courseId: string,
+    tasks: CreateTaskDto[]
+  ) {
+    // Verify instructor owns the course
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      include: {
+        Enrollment: {
+          select: { userId: true }
+        }
+      }
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+
+    const createdTasks: any[] = [];
+
+    // Create each task
+    for (const taskDto of tasks) {
+      const task = await this.prisma.task.create({
+        data: {
+          courseId,
+          createdBy: instructorId,
+          title: taskDto.title,
+          description: taskDto.description,
+          dueDate: new Date(taskDto.dueDate),
+          dueTime: taskDto.dueTime,
+          type: taskDto.type,
+          priority: taskDto.priority || 'MEDIUM',
+          maxPoints: taskDto.maxPoints,
+          estimatedTime: taskDto.estimatedTime,
+          updatedAt: new Date()
+        }
+      });
+
+      // Create submissions for all enrolled students
+      await Promise.all(
+        course.Enrollment.map(enrollment =>
+          this.prisma.taskSubmission.create({
+            data: {
+              taskId: task.id,
+              studentId: enrollment.userId,
+              status: 'PENDING'
+            }
+          })
+        )
+      );
+
+      createdTasks.push(task);
+    }
+
+    return {
+      created: createdTasks.length,
+      tasks: createdTasks,
+      message: `Successfully created ${createdTasks.length} tasks`
+    };
+  }
+
+  /**
+   * Duplicate an existing task
+   */
+  async duplicateTask(
+    instructorId: string,
+    courseId: string,
+    taskId: string,
+    newDueDate?: string
+  ) {
+    // Verify instructor owns the course
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      include: {
+        Enrollment: {
+          select: { userId: true }
+        }
+      }
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+
+    // Get original task
+    const originalTask = await this.prisma.task.findUnique({
+      where: { id: taskId }
+    });
+
+    if (!originalTask || originalTask.courseId !== courseId) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Create duplicate
+    const duplicatedTask = await this.prisma.task.create({
+      data: {
+        courseId,
+        createdBy: instructorId,
+        title: `${originalTask.title} (Copy)`,
+        description: originalTask.description,
+        dueDate: newDueDate ? new Date(newDueDate) : originalTask.dueDate,
+        dueTime: originalTask.dueTime,
+        type: originalTask.type,
+        priority: originalTask.priority,
+        maxPoints: originalTask.maxPoints,
+        estimatedTime: originalTask.estimatedTime,
+        updatedAt: new Date()
+      }
+    });
+
+    // Create submissions for all enrolled students
+    const submissions = await Promise.all(
+      course.Enrollment.map(enrollment =>
+        this.prisma.taskSubmission.create({
+          data: {
+            taskId: duplicatedTask.id,
+            studentId: enrollment.userId,
+            status: 'PENDING'
+          }
+        })
+      )
+    );
+
+    return {
+      task: duplicatedTask,
+      submissionsCreated: submissions.length,
+      message: 'Task duplicated successfully'
     };
   }
 }

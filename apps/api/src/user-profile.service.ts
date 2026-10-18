@@ -139,7 +139,7 @@ export class UserProfileService {
       this.prisma.taskSubmission.findMany({
         where: { studentId: userId },
         include: {
-          Task: {
+          task: {
             select: {
               maxPoints: true
             }
@@ -154,11 +154,11 @@ export class UserProfileService {
     ]);
 
     // Calculate grade statistics
-    const gradedSubmissions = taskSubmissions.filter(s => s.status === 'GRADED' && s.points !== null);
+    const gradedSubmissions = taskSubmissions.filter(s => s.status === 'COMPLETED' && s.points !== null);
     let averageGrade = 0;
     
     if (gradedSubmissions.length > 0) {
-      const totalPoints = gradedSubmissions.reduce((sum, s) => sum + (s.Task.maxPoints || 0), 0);
+      const totalPoints = gradedSubmissions.reduce((sum, s) => sum + (s.task.maxPoints || 0), 0);
       const earnedPoints = gradedSubmissions.reduce((sum, s) => sum + (s.points || 0), 0);
       averageGrade = totalPoints > 0 ? (earnedPoints / totalPoints * 100) : 0;
     }
@@ -166,7 +166,7 @@ export class UserProfileService {
     return {
       enrolledCourses: enrollmentCount,
       totalAssignments: taskSubmissions.length,
-      completedAssignments: taskSubmissions.filter(s => s.status === 'COMPLETED' || s.status === 'GRADED').length,
+      completedAssignments: taskSubmissions.filter(s => s.status === 'COMPLETED').length,
       averageGrade: Math.round(averageGrade * 10) / 10,
       totalActivities: totalGrades
     };

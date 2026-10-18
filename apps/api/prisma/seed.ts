@@ -308,8 +308,6 @@ async function main() {
             status: randomStatus,
             submittedAt: isGraded || randomStatus === 'COMPLETED' ? new Date() : null,
             points: isGraded ? Math.floor(Math.random() * (taskData.maxPoints || 100)) : null,
-            gradedBy: isGraded ? taskData.createdBy : null,
-            gradedAt: isGraded ? new Date() : null,
             feedback: isGraded ? 'Good work! Keep it up.' : null
           }
         });
@@ -348,25 +346,22 @@ async function main() {
           
           const existing = await prisma.scheduleEvent.findFirst({
             where: {
-              userId: student.id,
               courseId: course.id,
-              date: eventDate,
+              startDate: eventDate,
               startTime: startTime
             }
           });
-          
+
           if (!existing) {
             await prisma.scheduleEvent.create({
               data: {
-                userId: student.id,
                 courseId: course.id,
+                createdBy: course.instructorId,
                 title: `${course.title} - Lecture`,
-                instructor: `${instructors.find(i => i.id === course.instructorId)?.firstName} ${instructors.find(i => i.id === course.instructorId)?.lastName}`,
                 startTime,
                 endTime,
                 location: `Room ${100 + Math.floor(Math.random() * 400)}`,
                 type: 'lecture',
-                date: eventDate,
                 color: course.color,
                 dayOfWeek,
                 recurrence: 'weekly',
@@ -386,15 +381,15 @@ async function main() {
   console.log('📢 Creating announcements...');
   
   const announcementsData = [
-    { courseId: mathCourse.id, title: 'Midterm Exam Schedule', content: 'The midterm exam will be held on December 22nd at 9 AM in Hall A. Please bring your calculators and student IDs.', author: `${instructor1.firstName} ${instructor1.lastName}`, type: 'URGENT' as const, priority: 'HIGH' as const },
-    { courseId: mathCourse.id, title: 'Office Hours This Week', content: 'I will be available for extra office hours this week on Tuesday and Thursday from 2-4 PM.', author: `${instructor1.firstName} ${instructor1.lastName}`, type: 'GENERAL' as const, priority: 'MEDIUM' as const },
-    { courseId: physicsCourse.id, title: 'Lab Safety Reminder', content: 'Please remember to wear safety goggles and lab coats at all times in the laboratory.', author: `${instructor1.firstName} ${instructor1.lastName}`, type: 'REMINDER' as const, priority: 'HIGH' as const },
-    { courseId: dsaCourse.id, title: 'Project Deadline Extension', content: 'Due to popular request, the BST project deadline has been extended to December 25th.', author: `${instructor2.firstName} ${instructor2.lastName}`, type: 'URGENT' as const, priority: 'HIGH' as const },
-    { courseId: webDevCourse.id, title: 'Guest Lecture Next Week', content: 'We will have a guest speaker from Google next Wednesday discussing modern web frameworks.', author: `${instructor2.firstName} ${instructor2.lastName}`, type: 'EVENT' as const, priority: 'MEDIUM' as const },
-    { courseId: litCourse.id, title: 'Reading List Updated', content: 'The required reading list has been updated. Please check the course materials section.', author: `${instructor3.firstName} ${instructor3.lastName}`, type: 'GENERAL' as const, priority: 'MEDIUM' as const },
-    { courseId: chemCourse.id, title: 'Lab Report Guidelines', content: 'Updated lab report guidelines have been posted. Please review before submitting your reports.', author: `${instructor3.firstName} ${instructor3.lastName}`, type: 'REMINDER' as const, priority: 'MEDIUM' as const },
-    { courseId: historyCourse.id, title: 'Research Paper Topics', content: 'The list of approved research paper topics is now available. Choose your topic by this Friday.', author: `${instructor4.firstName} ${instructor4.lastName}`, type: 'GENERAL' as const, priority: 'MEDIUM' as const },
-    { courseId: psychCourse.id, title: 'Study Group Formation', content: 'Students interested in forming study groups for the upcoming exam, please see me after class.', author: `${instructor4.firstName} ${instructor4.lastName}`, type: 'GENERAL' as const, priority: 'LOW' as const },
+    { courseId: mathCourse.id, title: 'Midterm Exam Schedule', content: 'The midterm exam will be held on December 22nd at 9 AM in Hall A. Please bring your calculators and student IDs.', createdBy: instructor1.id, type: 'URGENT' as const, priority: 'HIGH' as const },
+    { courseId: mathCourse.id, title: 'Office Hours This Week', content: 'I will be available for extra office hours this week on Tuesday and Thursday from 2-4 PM.', createdBy: instructor1.id, type: 'GENERAL' as const, priority: 'MEDIUM' as const },
+    { courseId: physicsCourse.id, title: 'Lab Safety Reminder', content: 'Please remember to wear safety goggles and lab coats at all times in the laboratory.', createdBy: instructor1.id, type: 'REMINDER' as const, priority: 'HIGH' as const },
+    { courseId: dsaCourse.id, title: 'Project Deadline Extension', content: 'Due to popular request, the BST project deadline has been extended to December 25th.', createdBy: instructor2.id, type: 'URGENT' as const, priority: 'HIGH' as const },
+    { courseId: webDevCourse.id, title: 'Guest Lecture Next Week', content: 'We will have a guest speaker from Google next Wednesday discussing modern web frameworks.', createdBy: instructor2.id, type: 'EVENT' as const, priority: 'MEDIUM' as const },
+    { courseId: litCourse.id, title: 'Reading List Updated', content: 'The required reading list has been updated. Please check the course materials section.', createdBy: instructor3.id, type: 'GENERAL' as const, priority: 'MEDIUM' as const },
+    { courseId: chemCourse.id, title: 'Lab Report Guidelines', content: 'Updated lab report guidelines have been posted. Please review before submitting your reports.', createdBy: instructor3.id, type: 'REMINDER' as const, priority: 'MEDIUM' as const },
+    { courseId: historyCourse.id, title: 'Research Paper Topics', content: 'The list of approved research paper topics is now available. Choose your topic by this Friday.', createdBy: instructor4.id, type: 'GENERAL' as const, priority: 'MEDIUM' as const },
+    { courseId: psychCourse.id, title: 'Study Group Formation', content: 'Students interested in forming study groups for the upcoming exam, please see me after class.', createdBy: instructor4.id, type: 'GENERAL' as const, priority: 'LOW' as const },
   ];
   
   let announcementCount = 0;

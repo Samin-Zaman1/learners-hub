@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -12,6 +12,7 @@ model Activity {
   id          String       @id @default(uuid())
   userId      String
   courseId    String?
+  taskId      String?
   type        ActivityType
   title       String
   description String?
@@ -22,20 +23,23 @@ model Activity {
   dueDate     DateTime?
   Course      Course?      @relation(fields: [courseId], references: [id])
   User        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Task        Task?        @relation(fields: [taskId], references: [id])
 }
 
 model Announcement {
   id               String               @id @default(uuid())
-  courseId         String?
+  courseId         String
+  createdBy        String
   title            String
   content          String
-  author           String
   type             AnnouncementType     @default(GENERAL)
   priority         AnnouncementPriority @default(MEDIUM)
+  isPinned         Boolean              @default(false)
   hasAttachment    Boolean              @default(false)
   createdAt        DateTime             @default(now())
-  updatedAt        DateTime
-  Course           Course?              @relation(fields: [courseId], references: [id])
+  updatedAt        DateTime             @updatedAt
+  Course           Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator          User                 @relation("CreatedAnnouncements", fields: [createdBy], references: [id], onDelete: Cascade)
   AnnouncementRead AnnouncementRead[]
 }
 
@@ -51,65 +55,34 @@ model AnnouncementRead {
   @@unique([userId, announcementId])
 }
 
-model Attendance {
+model Course {
   id               String             @id @default(uuid())
-  scheduleId       String?
-  courseId         String
-  date             DateTime
+  title            String
+  code             String             @unique
+  description      String?
   instructorId     String
-  status           AttendanceStatus   @default(PENDING)
+  color            String             @default("#667eea")
+  credits          Int                @default(3)
+  semester         String
+  status           CourseStatus       @default(DRAFT)
+  level            String             @default("Beginner")
+  duration         String?
+  prerequisites    String[]
+  objectives       String[]
+  isPublished      Boolean            @default(false)
+  publishedAt      DateTime?
+  invitationCode   String?            @unique
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
-  Course           Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  User             User               @relation(fields: [instructorId], references: [id], onDelete: Cascade)
-  ScheduleEvent    ScheduleEvent?     @relation(fields: [scheduleId], references: [id])
-  AttendanceRecord AttendanceRecord[]
-
-  @@index([courseId, date])
-}
-
-model AttendanceRecord {
-  id                                    String                 @id @default(uuid())
-  attendanceId                          String
-  studentId                             String
-  status                                AttendanceRecordStatus @default(PRESENT)
-  markedAt                              DateTime               @default(now())
-  markedBy                              String
-  notes                                 String?
-  Attendance                            Attendance             @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
-  User_AttendanceRecord_markedByToUser  User                   @relation("AttendanceRecord_markedByToUser", fields: [markedBy], references: [id], onDelete: Cascade)
-  User_AttendanceRecord_studentIdToUser User                   @relation("AttendanceRecord_studentIdToUser", fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([attendanceId, studentId])
-  @@index([studentId, attendanceId])
-}
-
-model Course {
-  id             String           @id @default(uuid())
-  title          String
-  code           String           @unique
-  description    String?
-  instructorId   String
-  instructor     User             @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
-  color          String           @default("#667eea")
-  credits        Int              @default(3)
-  semester       String
-  status         CourseStatus     @default(DRAFT)
-  level          String?
-  maxEnrollments Int?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime
-  invitationCode String?          @unique
-  Activity       Activity[]
-  Announcement   Announcement[]
-  Attendance     Attendance[]
-  Enrollment     Enrollment[]
-  ScheduleEvent  ScheduleEvent[]
-  Task           Task[]
-  CourseModule   CourseModule[]
-  CourseMaterial CourseMaterial[]
-
-  @@index([instructorId])
+  Activity         Activity[]
+  Announcement     Announcement[]
+  instructor       User               @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
+  CourseInvitation CourseInvitation[]
+  CourseMaterial   CourseMaterial[]
+  CourseModule     CourseModule[]
+  Enrollment       Enrollment[]
+  ScheduleEvent    ScheduleEvent[]
+  Task             Task[]
 }
 
 model Enrollment {
@@ -127,94 +100,102 @@ model Enrollment {
 }
 
 model ScheduleEvent {
-  id         String       @id @default(uuid())
-  userId     String
-  courseId   String?
+  id         String    @id @default(uuid())
+  courseId   String
+  createdBy  String
   title      String
-  instructor String?
+  type       String    @default("lecture")
   startTime  String
   endTime    String
   location   String?
-  type       String       @default("lecture")
-  date       DateTime
-  recurrence String?      @default("one-time")
-  dayOfWeek  Int?
-  startDate  DateTime?
+  recurrence String?   // weekly, daily, one-time
+  dayOfWeek  Int?      // 0=Sunday, 1=Monday, etc
+  startDate  DateTime
   endDate    DateTime?
-  createdBy  String?
-  color      String       @default("#667eea")
-  createdAt  DateTime     @default(now())
-  Attendance Attendance[]
-  Course     Course?      @relation(fields: [courseId], references: [id])
-  User       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  color      String    @default("#667eea")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  Course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator    User      @relation("CreatedSchedules", fields: [createdBy], references: [id], onDelete: Cascade)
+}
+
+model ScheduleTemplate {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  pattern     String   // MWF, TTh, etc.
+  events      Json     // Array of event configurations
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  creator     User     @relation("CreatedScheduleTemplates", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Task {
-  id             String           @id @default(uuid())
-  userId         String
-  courseId       String?
-  title          String
-  description    String?
-  dueDate        DateTime
-  dueTime        String?
-  priority       TaskPriority     @default(MEDIUM)
-  type           String           @default("assignment")
-  progress       Int              @default(0)
-  status         TaskStatus       @default(PENDING)
-  estimatedTime  String?
-  maxPoints      Int?             @default(100)
-  createdBy      String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime
-  Course         Course?          @relation(fields: [courseId], references: [id])
-  User           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  TaskSubmission TaskSubmission[]
+  id            String           @id @default(uuid())
+  courseId      String
+  createdBy     String
+  title         String
+  description   String?
+  dueDate       DateTime
+  dueTime       String?
+  priority      TaskPriority     @default(MEDIUM)
+  type          String           @default("assignment")
+  maxPoints     Int?
+  estimatedTime String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  Course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator       User             @relation("CreatedTasks", fields: [createdBy], references: [id], onDelete: Cascade)
+  submissions   TaskSubmission[]
+  activities    Activity[]
+}
+
+model TaskSubmission {
+  id          String     @id @default(uuid())
+  taskId      String
+  studentId   String
+  status      TaskStatus @default(PENDING)
+  progress    Int        @default(0)
+  grade       String?
+  points      Int?
+  submittedAt DateTime?
+  feedback    String?
+  gradedBy    String?
+  gradedAt    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  task        Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  student     User       @relation("TaskSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
+  grader      User?      @relation("GradedBy", fields: [gradedBy], references: [id])
+
+  @@unique([taskId, studentId])
 }
 
 model User {
   id                                                String             @id @default(uuid())
   email                                             String             @unique
   passwordHash                                      String
+  role                                              Role               @default(STUDENT)
   firstName                                         String?
   lastName                                          String?
   profileImage                                      String?
-  role                                              Role               @default(STUDENT)
   createdAt                                         DateTime           @default(now())
   verificationCode                                  String?
   verified                                          Boolean            @default(false)
   Activity                                          Activity[]
   AnnouncementRead                                  AnnouncementRead[]
-  Attendance                                        Attendance[]
-  AttendanceRecord_AttendanceRecord_markedByToUser  AttendanceRecord[] @relation("AttendanceRecord_markedByToUser")
-  AttendanceRecord_AttendanceRecord_studentIdToUser AttendanceRecord[] @relation("AttendanceRecord_studentIdToUser")
   CoursesInstructing                                Course[]           @relation("CourseInstructor")
+  CourseInvitation_CourseInvitation_invitedByToUser CourseInvitation[] @relation("CourseInvitation_invitedByToUser")
+  CourseInvitation_CourseInvitation_studentIdToUser CourseInvitation[] @relation("CourseInvitation_studentIdToUser")
   Enrollment                                        Enrollment[]
-  ScheduleEvent                                     ScheduleEvent[]
-  Task                                              Task[]
-  TaskSubmissionsGraded                             TaskSubmission[]   @relation("GradedBy")
-  TaskSubmissionsStudent                            TaskSubmission[]   @relation("StudentSubmission")
-}
-
-model TaskSubmission {
-  id          String               @id @default(uuid())
-  taskId      String
-  studentId   String
-  status      SubmissionStatus     @default(PENDING)
-  submittedAt DateTime?
-  points      Int?
-  feedback    String?
-  gradedBy    String?
-  gradedAt    DateTime?
-  fileUrl     String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-  Task        Task                 @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  Student     User                 @relation("StudentSubmission", fields: [studentId], references: [id], onDelete: Cascade)
-  Grader      User?                @relation("GradedBy", fields: [gradedBy], references: [id])
-
-  @@unique([taskId, studentId])
-  @@index([studentId])
-  @@index([taskId])
+  CreatedTasks                                      Task[]               @relation("CreatedTasks")
+  TaskSubmissions                                   TaskSubmission[]     @relation("TaskSubmissions")
+  GradedSubmissions                                 TaskSubmission[]     @relation("GradedBy")
+  CreatedSchedules                                  ScheduleEvent[]      @relation("CreatedSchedules")
+  CreatedAnnouncements                              Announcement[]       @relation("CreatedAnnouncements")
+  CreatedScheduleTemplates                          ScheduleTemplate[]   @relation("CreatedScheduleTemplates")
 }
 
 model CourseModule {
@@ -222,13 +203,12 @@ model CourseModule {
   courseId       String
   title          String
   description    String?
-  order          Int              @default(0)
+  order          Int
+  isPublished    Boolean          @default(false)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  Course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   CourseMaterial CourseMaterial[]
-
-  @@index([courseId])
+  Course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model CourseMaterial {
@@ -237,17 +217,31 @@ model CourseMaterial {
   moduleId    String?
   title       String
   description String?
-  type        MaterialType  @default(DOCUMENT)
+  type        MaterialType
   fileUrl     String?
   content     String?
-  order       Int           @default(0)
+  fileSize    Int?
+  duration    String?
+  order       Int
+  isPublished Boolean       @default(false)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   Course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  Module      CourseModule? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  Module      CourseModule? @relation(fields: [moduleId], references: [id])
+}
 
-  @@index([courseId])
-  @@index([moduleId])
+model CourseInvitation {
+  id                                    String   @id
+  courseId                              String
+  studentId                             String
+  invitedBy                             String
+  status                                String   @default("pending")
+  createdAt                             DateTime @default(now())
+  Course                                Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  User_CourseInvitation_invitedByToUser User     @relation("CourseInvitation_invitedByToUser", fields: [invitedBy], references: [id], onDelete: Cascade)
+  User_CourseInvitation_studentIdToUser User     @relation("CourseInvitation_studentIdToUser", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId])
 }
 
 enum ActivityType {
@@ -271,23 +265,14 @@ enum AnnouncementType {
   REMINDER
 }
 
-enum AttendanceRecordStatus {
-  PRESENT
-  ABSENT
-  LATE
-  EXCUSED
-}
-
-enum AttendanceStatus {
-  PENDING
-  TAKEN
-}
-
 enum CourseStatus {
+  DRAFT
+  ASSIGNED
   ACTIVE
   COMPLETED
   DROPPED
-  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
 
 enum Role {
@@ -306,21 +291,15 @@ enum TaskStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
-}
-
-enum SubmissionStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
   GRADED
-  LATE
 }
 
 enum MaterialType {
-  DOCUMENT
   VIDEO
+  PDF
+  AUDIO
+  DOCUMENT
   LINK
   QUIZ
   ASSIGNMENT
 }
-

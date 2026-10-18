@@ -12,11 +12,21 @@ export class StudentSemesterService {
     try {
       // Get all enrollments for the student
       const enrollments = await prisma.enrollment.findMany({
-      where: { userId: studentId },
+      where: { 
+        userId: studentId,
+        Course: {
+          status: 'ACTIVE' as any // Only show published courses
+        }
+      },
       include: {
         Course: {
           include: {
             instructor: true,
+            _count: {
+              select: {
+                Enrollment: true,
+              },
+            },
           },
         },
       },
@@ -78,6 +88,7 @@ export class StudentSemesterService {
         userId: studentId,
         Course: {
           semester,
+          status: 'ACTIVE' as any // Only show published courses
         },
       },
       include: {
@@ -173,7 +184,12 @@ export class StudentSemesterService {
 
       // Get all enrollments
       const enrollments = await prisma.enrollment.findMany({
-        where: { userId: studentId },
+        where: { 
+          userId: studentId,
+          Course: {
+            status: 'ACTIVE' as any // Only show published courses
+          }
+        },
         include: {
           Course: {
             include: {
@@ -240,15 +256,15 @@ export class StudentSemesterService {
         taskId: { in: allTasks.map(t => t.id) },
       },
       include: {
-        Task: true,
+        task: true,
       },
     });
 
     const assignmentSubmissions = submissions.filter(
-      (s) => s.Task.type === 'assignment' || s.Task.type === 'ASSIGNMENT'
+      (s) => s.task.type === 'assignment' || s.task.type === 'ASSIGNMENT'
     );
     const quizSubmissions = submissions.filter(
-      (s) => s.Task.type === 'quiz' || s.Task.type === 'QUIZ'
+      (s) => s.task.type === 'quiz' || s.task.type === 'QUIZ'
     );
 
     // Calculate completion rate
@@ -323,7 +339,7 @@ export class StudentSemesterService {
         dueDate: {
           gte: now,
         },
-        TaskSubmission: {
+        submissions: {
           none: {
             studentId: studentId,
           },

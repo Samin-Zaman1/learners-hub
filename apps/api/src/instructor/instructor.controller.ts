@@ -98,6 +98,16 @@ export class InstructorController {
     return this.instructorCourseService.deleteCourse(id, req.user.userId);
   }
 
+  @Patch('courses/:id/publish')
+  async publishCourseToStudents(
+    @Request() req: any,
+    @Param('id') id: string
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorCourseService.publishToStudents(id, req.user.userId);
+  }
+
+
   @Post('courses/:id/invite-student')
   async inviteStudent(
     @Request() req: any,
@@ -252,6 +262,50 @@ export class InstructorController {
     return this.instructorTaskService.deleteTask(req.user.userId, courseId, taskId);
   }
 
+  @Get('courses/:id/submissions')
+  async getAllCourseSubmissions(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Body() filters?: { taskId?: string; status?: string; studentId?: string }
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorTaskService.getAllCourseSubmissions(req.user.userId, courseId, filters);
+  }
+
+  @Post('courses/:id/tasks/bulk')
+  @HttpCode(HttpStatus.CREATED)
+  async bulkCreateTasks(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Body() body: { tasks: CreateTaskDto[] }
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorTaskService.bulkCreateTasks(req.user.userId, courseId, body.tasks);
+  }
+
+  @Post('courses/:id/tasks/:taskId/duplicate')
+  @HttpCode(HttpStatus.CREATED)
+  async duplicateTask(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Param('taskId') taskId: string,
+    @Body() body?: { newDueDate?: string }
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorTaskService.duplicateTask(req.user.userId, courseId, taskId, body?.newDueDate);
+  }
+
+  @Patch('courses/:id/tasks/:taskId/grade-bulk')
+  async bulkGradeSubmissions(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Param('taskId') taskId: string,
+    @Body() body: { grades: Array<{ submissionId: string; points?: number; feedback?: string }> }
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorTaskService.bulkGradeSubmissions(req.user.userId, courseId, taskId, body.grades);
+  }
+
   // ============ Schedule Management Endpoints ============
 
   @Post('courses/:id/schedule')
@@ -292,6 +346,44 @@ export class InstructorController {
   ) {
     this.checkInstructorRole(req.user);
     return this.instructorScheduleService.getScheduleStatistics(req.user.userId, courseId);
+  }
+
+  @Post('courses/:id/schedule/save-template')
+  @HttpCode(HttpStatus.CREATED)
+  async saveScheduleAsTemplate(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Body() templateData: { name: string; description?: string }
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorScheduleService.saveAsTemplate(req.user.userId, courseId, templateData);
+  }
+
+  @Get('schedule-templates')
+  async getScheduleTemplates(@Request() req: any) {
+    this.checkInstructorRole(req.user);
+    return this.instructorScheduleService.getTemplates(req.user.userId);
+  }
+
+  @Post('courses/:id/schedule/apply-template')
+  @HttpCode(HttpStatus.CREATED)
+  async applyScheduleTemplate(
+    @Request() req: any,
+    @Param('id') courseId: string,
+    @Body() body: { templateId: string; startDate: string }
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorScheduleService.applyTemplate(req.user.userId, courseId, body.templateId, body.startDate);
+  }
+
+  @Delete('schedule-templates/:templateId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteScheduleTemplate(
+    @Request() req: any,
+    @Param('templateId') templateId: string
+  ) {
+    this.checkInstructorRole(req.user);
+    return this.instructorScheduleService.deleteTemplate(req.user.userId, templateId);
   }
 
   @Get('courses/:id/schedule/:scheduleId')

@@ -10,7 +10,10 @@ export class StudentCourseService {
     const enrollments = await this.prisma.enrollment.findMany({
       where: { 
         userId: studentId,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        Course: {
+          status: 'ACTIVE' as any // Only show courses that are published to students
+        }
       },
       include: {
         Course: {
@@ -90,8 +93,7 @@ export class StudentCourseService {
       semester: course.semester,
       level: course.level,
       enrollmentCount: course._count.Enrollment,
-      materialCount: course._count.CourseMaterial,
-      maxEnrollments: course.maxEnrollments
+      materialCount: course._count.CourseMaterial
     };
   }
 
@@ -101,9 +103,9 @@ export class StudentCourseService {
       throw new BadRequestException('Invalid invitation code format');
     }
 
-    // Find course by invitation code
+    // Find course by code
     const course = await this.prisma.course.findUnique({
-      where: { invitationCode: code },
+      where: { code: code },
       include: {
         _count: {
           select: {
@@ -114,16 +116,12 @@ export class StudentCourseService {
     });
 
     if (!course) {
-      throw new NotFoundException('Course not found with this invitation code');
+      throw new NotFoundException('Course not found with this code');
     }
 
+    // Check if course is published
     if (course.status !== 'ACTIVE') {
       throw new BadRequestException('This course is not published yet');
-    }
-
-    // Check enrollment limit
-    if (course.maxEnrollments && course._count.Enrollment >= course.maxEnrollments) {
-      throw new BadRequestException('This course has reached its maximum enrollment capacity');
     }
 
     // Check if already enrolled

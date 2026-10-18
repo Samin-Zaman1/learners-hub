@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ScheduleEvent } from '@prisma/client';
 
 export interface CreateScheduleEventDto {
   title: string;
@@ -60,7 +60,6 @@ export class InstructorScheduleService {
     // Create the schedule event
     const scheduleEvent = await this.prisma.scheduleEvent.create({
       data: {
-        userId: instructorId,
         courseId,
         createdBy: instructorId,
         title: createDto.title,
@@ -69,11 +68,11 @@ export class InstructorScheduleService {
         endTime: createDto.endTime,
         location: createDto.location,
         color: createDto.color || course.color, // Use course color if not specified
-        date: new Date(createDto.startDate), // Required field
         recurrence: createDto.recurrence || 'one-time',
         dayOfWeek: createDto.dayOfWeek,
         startDate: new Date(createDto.startDate),
-        endDate: createDto.endDate ? new Date(createDto.endDate) : null
+        endDate: createDto.endDate ? new Date(createDto.endDate) : null,
+        updatedAt: new Date()
       }
     });
 
@@ -256,7 +255,6 @@ export class InstructorScheduleService {
       events.map(event =>
         this.prisma.scheduleEvent.create({
           data: {
-            userId: instructorId,
             courseId,
             createdBy: instructorId,
             title: event.title,
@@ -265,7 +263,6 @@ export class InstructorScheduleService {
             endTime: event.endTime,
             location: event.location,
             color: event.color || course.color,
-            date: new Date(event.startDate), // Required field
             recurrence: event.recurrence || 'one-time',
             dayOfWeek: event.dayOfWeek,
             startDate: new Date(event.startDate),
@@ -320,6 +317,168 @@ export class InstructorScheduleService {
       weekly,
       daily,
       byType: eventsByType
+    };
+  }
+
+  /**
+   * Save current schedule as a template
+   */
+  async saveAsTemplate(
+    instructorId: string,
+    courseId: string,
+    templateData: { name: string; description?: string }
+  ) {
+    // Get all schedule events for the course
+    const scheduleEvents = await this.prisma.scheduleEvent.findMany({
+      where: { courseId },
+      select: {
+        title: true,
+        type: true,
+        startTime: true,
+        endTime: true,
+        location: true,
+        recurrence: true,
+        dayOfWeek: true,
+        color: true
+      }
+    });
+
+    if (scheduleEvents.length === 0) {
+      throw new BadRequestException('No schedule events to save as template');
+    }
+
+    // Determine pattern (e.g., MWF, TTh)
+    const days = scheduleEvents
+      .filter(e => e.dayOfWeek !== null)
+      .map(e => e.dayOfWeek)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
+    
+    const dayMap = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
+    const pattern = days.map(d => dayMap[d!]).join('');
+
+    // Create template
+    const template = await this.prisma.scheduleTemplate.create({
+      data: {
+        userId: instructorId,
+        name: templateData.name,
+        description: templateData.description,
+        pattern: pattern || 'Custom',
+        events: scheduleEvents as any
+      }
+    });
+
+    return {
+      template,
+      message: 'Schedule saved as template successfully'
+    };
+  }
+
+  /**
+   * Get all templates for instructor
+   */
+  async getTemplates(instructorId: string) {
+    const templates = await this.prisma.scheduleTemplate.findMany({
+      where: {
+        OR: [
+          { userId: instructorId },
+          { isPublic: true }
+        ]
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return templates;
+  }
+
+  /**
+   * Apply a template to a course
+   */
+  async applyTemplate(
+    instructorId: string,
+    courseId: string,
+    templateId: string,
+    startDate: string
+  ) {
+    // Verify course ownership
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId }
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+
+    // Get template
+    const template = await this.prisma.scheduleTemplate.findUnique({
+      where: { id: templateId }
+    });
+
+    if (!template) {
+      throw new NotFoundException('Template not found');
+    }
+
+    if (template.userId !== instructorId && !template.isPublic) {
+      throw new ForbiddenException('You do not have access to this template');
+    }
+
+    // Create schedule events from template
+    const events = template.events as any[];
+    const createdEvents: ScheduleEvent[] = [];
+
+    for (const eventTemplate of events) {
+      const event = await this.prisma.scheduleEvent.create({
+        data: {
+          courseId,
+          createdBy: instructorId,
+          title: eventTemplate.title,
+          type: eventTemplate.type,
+          startTime: eventTemplate.startTime,
+          endTime: eventTemplate.endTime,
+          location: eventTemplate.location,
+          recurrence: eventTemplate.recurrence,
+          dayOfWeek: eventTemplate.dayOfWeek,
+          startDate: new Date(startDate),
+          color: eventTemplate.color || course.color,
+          updatedAt: new Date()
+        }
+      });
+      createdEvents.push(event);
+    }
+
+    return {
+      created: createdEvents.length,
+      events: createdEvents,
+      message: `Successfully applied template with ${createdEvents.length} events`
+    };
+  }
+
+  /**
+   * Delete a template
+   */
+  async deleteTemplate(instructorId: string, templateId: string) {
+    const template = await this.prisma.scheduleTemplate.findUnique({
+      where: { id: templateId }
+    });
+
+    if (!template) {
+      throw new NotFoundException('Template not found');
+    }
+
+    if (template.userId !== instructorId) {
+      throw new ForbiddenException('You do not own this template');
+    }
+
+    await this.prisma.scheduleTemplate.delete({
+      where: { id: templateId }
+    });
+
+    return {
+      message: 'Template deleted successfully'
     };
   }
 }

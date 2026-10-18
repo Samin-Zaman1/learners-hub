@@ -26,12 +26,12 @@ export class StudentTaskService {
     const submissions = await this.prisma.taskSubmission.findMany({
       where: {
         studentId,
-        Task: {
+        task: {
           courseId: { in: courseIds }
         }
       },
       include: {
-        Task: {
+        task: {
           include: {
             Course: {
               select: {
@@ -45,7 +45,7 @@ export class StudentTaskService {
         }
       },
       orderBy: {
-        Task: {
+        task: {
           dueDate: 'asc'
         }
       }
@@ -53,16 +53,16 @@ export class StudentTaskService {
 
     return submissions.map(submission => ({
       id: submission.id,
-      taskId: submission.Task.id,
-      title: submission.Task.title,
-      description: submission.Task.description,
-      type: submission.Task.type,
-      priority: submission.Task.priority,
-      dueDate: submission.Task.dueDate,
-      dueTime: submission.Task.dueTime,
-      maxPoints: submission.Task.maxPoints,
-      estimatedTime: submission.Task.estimatedTime,
-      course: submission.Task.Course,
+      taskId: submission.task.id,
+      title: submission.task.title,
+      description: submission.task.description,
+      type: submission.task.type,
+      priority: submission.task.priority,
+      dueDate: submission.task.dueDate,
+      dueTime: submission.task.dueTime,
+      maxPoints: submission.task.maxPoints,
+      estimatedTime: submission.task.estimatedTime,
+      course: submission.task.Course,
       // Submission details
       status: submission.status,
       points: submission.points,
@@ -80,7 +80,7 @@ export class StudentTaskService {
     const submission = await this.prisma.taskSubmission.findUnique({
       where: { id: submissionId },
       include: {
-        Task: {
+        task: {
           include: {
             Course: {
               select: {
@@ -113,19 +113,19 @@ export class StudentTaskService {
 
     return {
       id: submission.id,
-      Task: {
-        id: submission.Task.id,
-        title: submission.Task.title,
-        description: submission.Task.description,
-        type: submission.Task.type,
-        priority: submission.Task.priority,
-        dueDate: submission.Task.dueDate,
-        dueTime: submission.Task.dueTime,
-        maxPoints: submission.Task.maxPoints,
-        estimatedTime: submission.Task.estimatedTime,
-        createdAt: submission.Task.createdAt,
-        course: submission.Task.Course,
-        createdBy: submission.Task.createdBy
+      task: {
+        id: submission.task.id,
+        title: submission.task.title,
+        description: submission.task.description,
+        type: submission.task.type,
+        priority: submission.task.priority,
+        dueDate: submission.task.dueDate,
+        dueTime: submission.task.dueTime,
+        maxPoints: submission.task.maxPoints,
+        estimatedTime: submission.task.estimatedTime,
+        createdAt: submission.task.createdAt,
+        course: submission.task.Course,
+        createdBy: submission.task.createdBy
       },
       status: submission.status,
       points: submission.points,
@@ -144,7 +144,7 @@ export class StudentTaskService {
     const submission = await this.prisma.taskSubmission.findUnique({
       where: { id: submissionId },
       include: {
-        Task: {
+        task: {
           select: {
             id: true,
             title: true,
@@ -184,9 +184,9 @@ export class StudentTaskService {
     await this.prisma.activity.create({
       data: {
         userId: studentId,
-        courseId: submission.Task.courseId,
+        courseId: submission.task.courseId,
         type: updateData.status === 'COMPLETED' ? 'SUBMISSION' : 'ASSIGNMENT',
-        title: updateData.status === 'COMPLETED' ? `Submitted: ${submission.Task.title}` : `Updated: ${submission.Task.title}`,
+        title: updateData.status === 'COMPLETED' ? `Submitted: ${submission.task.title}` : `Updated: ${submission.task.title}`,
         description: updateData.status === 'COMPLETED'
           ? `Completed and submitted task`
           : `Submission updated`,
@@ -209,7 +209,7 @@ export class StudentTaskService {
     const submissions = await this.prisma.taskSubmission.findMany({
       where: { studentId },
       include: {
-        Task: {
+        task: {
           select: {
             dueDate: true,
             maxPoints: true
@@ -223,16 +223,16 @@ export class StudentTaskService {
     const pending = submissions.filter(s => s.status === 'PENDING').length;
     const inProgress = submissions.filter(s => s.status === 'IN_PROGRESS').length;
     const completed = submissions.filter(s => s.status === 'COMPLETED').length;
-    const graded = submissions.filter(s => s.status === 'GRADED').length;
+    const graded = submissions.filter(s => s.status === 'COMPLETED' && s.points !== null).length;
     
     // Calculate overdue tasks (PENDING or IN_PROGRESS and past due date)
     const overdue = submissions.filter(s => 
       (s.status === 'PENDING' || s.status === 'IN_PROGRESS') && 
-      s.Task.dueDate < now
+      s.task.dueDate < now
     ).length;
 
     // Calculate average grade (only graded submissions with points)
-    const gradedWithPoints = submissions.filter(s => s.status === 'GRADED' && s.points !== null);
+    const gradedWithPoints = submissions.filter(s => s.status === 'COMPLETED' && s.points !== null);
     let averageGrade = 0;
     let totalPoints = 0;
     let earnedPoints = 0;
@@ -240,7 +240,7 @@ export class StudentTaskService {
     if (gradedWithPoints.length > 0) {
       gradedWithPoints.forEach(s => {
         earnedPoints += s.points || 0;
-        totalPoints += s.Task.maxPoints || 0;
+        totalPoints += s.task.maxPoints || 0;
       });
       averageGrade = totalPoints > 0 ? (earnedPoints / totalPoints * 100) : 0;
     }
@@ -275,8 +275,12 @@ export class StudentTaskService {
     const submissions = await this.prisma.taskSubmission.findMany({
       where: {
         studentId,
-        status: { not: 'GRADED' },
-        Task: {
+        OR: [
+          { status: 'PENDING' },
+          { status: 'IN_PROGRESS' },
+          { status: 'COMPLETED', points: null }
+        ],
+        task: {
           courseId: { in: courseIds },
           dueDate: {
             gte: now,
@@ -285,7 +289,7 @@ export class StudentTaskService {
         }
       },
       include: {
-        Task: {
+        task: {
           include: {
             Course: {
               select: {
@@ -299,7 +303,7 @@ export class StudentTaskService {
         }
       },
       orderBy: {
-        Task: {
+        task: {
           dueDate: 'asc'
         }
       },
@@ -308,13 +312,13 @@ export class StudentTaskService {
 
     return submissions.map(submission => ({
       id: submission.id,
-      taskId: submission.Task.id,
-      title: submission.Task.title,
-      type: submission.Task.type,
-      priority: submission.Task.priority,
-      dueDate: submission.Task.dueDate,
-      dueTime: submission.Task.dueTime,
-      course: submission.Task.Course,
+      taskId: submission.task.id,
+      title: submission.task.title,
+      type: submission.task.type,
+      priority: submission.task.priority,
+      dueDate: submission.task.dueDate,
+      dueTime: submission.task.dueTime,
+      course: submission.task.Course,
       status: submission.status
     }));
   }

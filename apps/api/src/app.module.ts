@@ -21,10 +21,20 @@ import { AdminModule } from './admin/admin.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'changeme-in-production',
-      signOptions: { expiresIn: '7d' },
+    // Registered once, globally: every module verifies tokens with this secret.
+    // registerAsync so the secret is read after ConfigModule has loaded .env.
+    JwtModule.registerAsync({
       global: true,
+      useFactory: () => {
+        const secret = process.env.JWT_SECRET;
+        if (!secret && process.env.NODE_ENV === 'production') {
+          throw new Error('JWT_SECRET must be set in production');
+        }
+        return {
+          secret: secret || 'dev-only-jwt-secret',
+          signOptions: { expiresIn: '7d' },
+        };
+      },
     }),
     DashboardModule,
     InstructorModule,

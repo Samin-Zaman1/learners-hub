@@ -1,4 +1,4 @@
-# Champius TODO
+# Learners Hub TODO
 
 ## 1. Make the API build again
 - [x] Fix the 30 API type errors caused by the schema rewrite

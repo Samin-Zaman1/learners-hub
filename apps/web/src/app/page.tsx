@@ -14,7 +14,7 @@ export default function Home() {
           height={38}
           priority
         />
-        <h1>Welcome to Champius LMS</h1>
+        <h1>Welcome to Learners Hub</h1>
         
         {/* Navigation Links */}
         <div style={{ 

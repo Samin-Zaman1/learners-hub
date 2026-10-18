@@ -161,7 +161,7 @@ export default function StudentDashboard() {
             <Box 
               component="img"
               src="/logo.svg"
-              alt="Champius"
+              alt="Learners Hub"
               sx={{
                 height: 40,
                 width: 'auto',

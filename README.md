@@ -1,4 +1,4 @@
-# Champius - Learning Management System
+# Learners Hub - Learning Management System
 
 A full-stack learning management system for students, instructors and admins: courses, tasks and grading, schedules, announcements and course materials.
 
@@ -46,7 +46,7 @@ ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='choose-a-password' npx ts-node creat
 ## Project structure
 
 ```
-Champius/
+learners-hub/
 ├── apps/
 │   ├── api/                # NestJS API
 │   │   ├── prisma/         # schema, migrations, seed

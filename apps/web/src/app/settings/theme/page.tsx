@@ -52,7 +52,7 @@ export default function ThemeSettingsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'champius-theme.json';
+    link.download = 'learners-hub-theme.json';
     link.click();
     URL.revokeObjectURL(url);
   };

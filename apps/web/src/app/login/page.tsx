@@ -116,7 +116,7 @@ export default function LoginPage() {
                 <Box
                   component="img"
                   src="/logo.svg"
-                  alt="Champius Logo"
+                  alt="Learners Hub Logo"
                   sx={{
                     height: 40,
                     width: 'auto',
@@ -125,7 +125,7 @@ export default function LoginPage() {
               </Box>
 
               <Typography variant="h5" fontWeight={700} gutterBottom>
-                Welcome to Champius
+                Welcome to Learners Hub
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Sign in with your account credentials. You&apos;ll be automatically directed to your dashboard.
@@ -264,7 +264,7 @@ export default function LoginPage() {
                 <Box
                   component="img"
                   src="/main-image.svg"
-                  alt="Champius Platform Illustration"
+                  alt="Learners Hub Platform Illustration"
                   sx={{
                     width: '100%',
                     height: 'auto',

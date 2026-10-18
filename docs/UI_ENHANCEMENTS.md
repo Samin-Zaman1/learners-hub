@@ -1,4 +1,4 @@
-# Champius UI Enhancement System
+# Learners Hub UI Enhancement System
 
 ## Overview
 

@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function createAdmin() {
-  const email = process.env.ADMIN_EMAIL || 'admin@champius.com';
+  const email = process.env.ADMIN_EMAIL || 'admin@learnershub.com';
   const password = process.env.ADMIN_PASSWORD;
 
   if (!password || password.length < 8) {

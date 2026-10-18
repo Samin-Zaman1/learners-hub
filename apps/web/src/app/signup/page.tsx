@@ -91,7 +91,7 @@ export default function SignupPage() {
           <Box
             component="img"
             src="/logo.svg"
-            alt="Champius Logo"
+            alt="Learners Hub Logo"
             sx={{
               height: 48,
               width: 'auto',
@@ -100,7 +100,7 @@ export default function SignupPage() {
         </Box>
 
         <Typography variant="h4" fontWeight={700} gutterBottom textAlign="center">
-          Join Champius
+          Join Learners Hub
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }} textAlign="center">
           Create your account to start learning or teaching

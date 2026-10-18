@@ -17,9 +17,9 @@ import {
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
-    siteName: 'Champius LMS',
-    siteUrl: 'https://champius.com',
-    adminEmail: 'admin@champius.com',
+    siteName: 'Learners Hub',
+    siteUrl: 'https://learnershub.com',
+    adminEmail: 'admin@learnershub.com',
     allowRegistration: true,
     requireEmailVerification: true,
     enableCourseReviews: true,

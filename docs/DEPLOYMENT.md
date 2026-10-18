@@ -1,6 +1,6 @@
 # Deployment
 
-Champius deploys as two services:
+Learners Hub deploys as two services:
 
 | Part | Host | Config |
 |---|---|---|

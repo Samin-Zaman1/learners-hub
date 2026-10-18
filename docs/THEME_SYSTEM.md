@@ -1,8 +1,8 @@
-# Champius Theme System
+# Learners Hub Theme System
 
 ## Overview
 
-The Champius theme system provides comprehensive theming capabilities with support for:
+The Learners Hub theme system provides comprehensive theming capabilities with support for:
 - **Dynamic color customization** with color pickers
 - **Gradient support** for buttons, app bars, and backgrounds
 - **Predefined themes** (Grey, Blue, Purple, Green, Orange)

@@ -1,8 +1,8 @@
 {
-  "name": "champius",
+  "name": "learners-hub",
   "version": "1.0.0",
   "private": true,
-  "description": "Champius Learning Management System - Full-stack application with NestJS backend and Next.js frontend",
+  "description": "Learners Hub Learning Management System - Full-stack application with NestJS backend and Next.js frontend",
   "scripts": {
     "install:all": "npm install && npm install --prefix apps/api && npm install --prefix apps/web",
     "db:up": "docker compose up -d",

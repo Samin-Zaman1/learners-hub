@@ -1,7 +1,7 @@
-# Champius Development Stack
+# Learners Hub Development Stack
 
 ## 📋 Project Overview
-**Champius Learning Management System** - A full-stack LMS application with a modern tech stack designed for scalability and developer experience.
+**Learners Hub Learning Management System** - A full-stack LMS application with a modern tech stack designed for scalability and developer experience.
 
 ---
 
@@ -283,7 +283,7 @@ SMTP_HOST="localhost"
 SMTP_PORT=1025
 SMTP_USER=""
 SMTP_PASSWORD=""
-EMAIL_FROM="noreply@champius.com"
+EMAIL_FROM="noreply@learnershub.com"
 
 # File Storage (MinIO)
 MINIO_ENDPOINT="localhost"
@@ -303,7 +303,7 @@ REDIS_PORT=6379
 NEXT_PUBLIC_API_URL="http://localhost:4000"
 
 # Optional
-NEXT_PUBLIC_APP_NAME="Champius"
+NEXT_PUBLIC_APP_NAME="Learners Hub"
 NEXT_PUBLIC_APP_VERSION="1.0.0"
 ```
 
@@ -541,4 +541,4 @@ MIT License - See package.json for details
 ---
 
 **Last Updated**: January 2026
-**Maintained By**: Champius Development Team
+**Maintained By**: Learners Hub Development Team

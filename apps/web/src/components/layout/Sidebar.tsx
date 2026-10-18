@@ -244,7 +244,7 @@ export default function Sidebar({ open, onClose, variant = 'permanent' }: Sideba
           <Box
             component="img"
             src="/logo.svg"
-            alt="Champius Logo"
+            alt="Learners Hub Logo"
             sx={{
               height: 40,
               width: 'auto',
@@ -254,7 +254,7 @@ export default function Sidebar({ open, onClose, variant = 'permanent' }: Sideba
           <Box
             component="img"
             src="/logo.svg"
-            alt="Champius"
+            alt="Learners Hub"
             sx={{
               height: 32,
               width: 'auto',

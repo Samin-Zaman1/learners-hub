@@ -62,7 +62,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
               </IconButton>
               
               <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                {title || 'Champius'}
+                {title || 'Learners Hub'}
               </Typography>
               
               <IconButton>

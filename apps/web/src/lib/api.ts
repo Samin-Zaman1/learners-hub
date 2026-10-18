@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -41,6 +41,16 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Prefer the API's error message over axios' generic one
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message;
+    if (Array.isArray(message)) return message.join(', ');
+    if (typeof message === 'string') return message;
+  }
+  return fallback;
+}
 
 // Types for Course API
 export interface Course {

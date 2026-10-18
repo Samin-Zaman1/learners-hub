@@ -35,7 +35,17 @@ import {
 } from '@mui/icons-material';
 import { DashboardLayout, PageHeader } from '../../components';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../lib/api';
+import { apiClient, getApiErrorMessage } from '../../lib/api';
+
+interface ProfileStats {
+  enrolledCourses?: number;
+  completedAssignments?: number;
+  totalAssignments?: number;
+  averageGrade?: number;
+  totalCourses?: number;
+  totalStudents?: number;
+  totalTasks?: number;
+}
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -109,7 +119,7 @@ export default function ProfilePage() {
       setEditMode(false);
     },
     onError: (error: unknown) => {
-      setSnackbarMessage(error.response?.data?.message || 'Failed to update profile');
+      setSnackbarMessage(getApiErrorMessage(error, 'Failed to update profile'));
     }
   });
 
@@ -125,7 +135,7 @@ export default function ProfilePage() {
       });
     },
     onError: (error: unknown) => {
-      setSnackbarMessage(error.response?.data?.message || 'Failed to change password');
+      setSnackbarMessage(getApiErrorMessage(error, 'Failed to change password'));
     }
   });
 
@@ -177,7 +187,7 @@ export default function ProfilePage() {
     );
   }
 
-  const stats = (profile as unknown as { stats?: unknown })?.stats || {};
+  const stats: ProfileStats = profile?.stats || {};
   const isStudent = (profile as unknown as { role?: string })?.role === 'STUDENT';
   const isInstructor = (profile as unknown as { role?: string })?.role === 'INSTRUCTOR';
 

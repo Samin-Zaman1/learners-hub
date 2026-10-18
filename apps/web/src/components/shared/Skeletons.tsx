@@ -46,7 +46,7 @@ export const SkeletonGrid: React.FC<{ items?: number }> = ({ items = 6 }) => {
   return (
     <Grid container spacing={3}>
       {Array.from({ length: items }).map((_, index) => (
-        <Grid key={index} item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
           <SkeletonCard />
         </Grid>
       ))}

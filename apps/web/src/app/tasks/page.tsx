@@ -391,7 +391,7 @@ export default function TaskManagementPage() {
                   <InputLabel>Status</InputLabel>
                   <Select
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as unknown)}
+                    onChange={(e) => setStatus(e.target.value as typeof status)}
                     label="Status"
                   >
                     <MenuItem value="PENDING">Pending</MenuItem>

@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { getApiErrorMessage } from '@/lib/api';
 import {
   Box,
   Paper,
@@ -41,7 +42,7 @@ export default function LoginPage() {
     setMsg('');
     try {
       // Login without role - let backend auto-detect from database
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
       const res = await axios.post(`${apiUrl}/auth/login`, {
         email,
         password,
@@ -67,7 +68,7 @@ export default function LoginPage() {
         setMsg(res.data?.message || 'Login failed');
       }
     } catch (error: unknown) {
-      setMsg(error.response?.data?.message || 'Login failed');
+      setMsg(getApiErrorMessage(error, 'Login failed'));
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ export default function LoginPage() {
                 Welcome to Champius
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Sign in with your account credentials. You'll be automatically directed to your dashboard.
+                Sign in with your account credentials. You&apos;ll be automatically directed to your dashboard.
               </Typography>
 
               <form onSubmit={handleSubmit} noValidate>

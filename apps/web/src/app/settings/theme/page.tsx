@@ -91,7 +91,7 @@ export default function ThemeSettingsPage() {
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
         {/* Predefined Themes */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Predefined Themes
@@ -170,7 +170,7 @@ export default function ThemeSettingsPage() {
         </Grid>
 
         {/* Color Customization */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Color Customization
@@ -181,7 +181,7 @@ export default function ThemeSettingsPage() {
 
             <Grid container spacing={2}>
               {Object.entries(localColors).map(([key, value]) => (
-                <Grid item xs={12} sm={6} key={key}>
+                <Grid size={{ xs: 12, sm: 6 }} key={key}>
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
                       {key.replace(/([A-Z])/g, ' $1').trim()}
@@ -215,7 +215,7 @@ export default function ThemeSettingsPage() {
         </Grid>
 
         {/* Gradient Settings */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Gradient Settings
@@ -327,7 +327,7 @@ export default function ThemeSettingsPage() {
         </Grid>
 
         {/* Actions */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Theme Actions
@@ -348,34 +348,34 @@ export default function ThemeSettingsPage() {
         </Grid>
 
         {/* Preview */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Component Preview
             </Typography>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Button variant="contained" fullWidth>
                   Contained Button
                 </Button>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Button variant="outlined" fullWidth>
                   Outlined Button
                 </Button>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Button variant="text" fullWidth>
                   Text Button
                 </Button>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Chip label="Chip Component" color="primary" />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField label="Text Field" placeholder="Type something..." fullWidth />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6">Card Component</Typography>

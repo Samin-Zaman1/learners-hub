@@ -1,5 +1,7 @@
 'use client';
 
+import { useParams } from 'next/navigation';
+
 import React, { useState } from 'react';
 import {
   Box,
@@ -125,7 +127,8 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-export default function InstructorCourseDetail({ params }: { params: { id: string } }) {
+export default function InstructorCourseDetail() {
+  const params = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const [currentTab, setCurrentTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

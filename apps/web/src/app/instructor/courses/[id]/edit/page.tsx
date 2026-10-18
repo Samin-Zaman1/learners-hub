@@ -1,5 +1,7 @@
 'use client';
 
+import { useParams } from 'next/navigation';
+
 import React, { useState } from 'react';
 import {
   Box,
@@ -85,7 +87,8 @@ const categories = [
   'Teaching & Academics',
 ];
 
-export default function EditCourse({ params }: { params: { id: string } }) {
+export default function EditCourse() {
+  const params = useParams<{ id: string }>();
   const [activeStep, setActiveStep] = useState(0);
   const [tagInput, setTagInput] = useState('');
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
@@ -180,7 +183,7 @@ export default function EditCourse({ params }: { params: { id: string } }) {
 
   const handleAddModule = () => {
     if (newModule.title.trim()) {
-      const module: CourseModule = {
+      const courseModule: CourseModule = {
         id: crypto.randomUUID(),
         title: newModule.title.trim(),
         description: newModule.description.trim(),
@@ -189,7 +192,7 @@ export default function EditCourse({ params }: { params: { id: string } }) {
       };
       setFormData(prev => ({
         ...prev,
-        modules: [...prev.modules, module]
+        modules: [...prev.modules, courseModule]
       }));
       setNewModule({ title: '', description: '' });
       setModuleDialogOpen(false);

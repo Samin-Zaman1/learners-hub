@@ -55,7 +55,7 @@ const transformActivity = (activity: APIActivity, isClient: boolean = false): Ac
 
   return {
     ...activity,
-    displayType: (activity.type?.toLowerCase() as unknown) || 'activity',
+    displayType: (activity.type?.toLowerCase() as ActivityDisplay['displayType']) || 'activity',
     displayStatus: 'new',
     timestamp,
   };

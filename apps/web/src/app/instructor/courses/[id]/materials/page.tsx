@@ -46,7 +46,7 @@ import {
 import { DashboardLayout } from '../../../../../components';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../../../lib/api';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 interface Module {
   id: string;
@@ -80,7 +80,8 @@ const materialTypeOptions = [
   { value: 'ASSIGNMENT', label: 'Assignment', icon: <Assignment /> },
 ];
 
-export default function CourseMaterialsPage({ params }: { params: { id: string } }) {
+export default function CourseMaterialsPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
   

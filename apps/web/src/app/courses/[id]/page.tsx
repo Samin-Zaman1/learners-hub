@@ -55,7 +55,7 @@ import {
   ExitToApp,
 } from '@mui/icons-material';
 import { DashboardLayout } from '@/components';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useUnenrollCourse } from '@/hooks/useCourses';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api';
@@ -88,7 +88,8 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-export default function CourseDetailPage({ params }: { params: { id: string } }) {
+export default function CourseDetailPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const [tabValue, setTabValue] = useState(0);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
@@ -188,7 +189,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
     return (
       <DashboardLayout title="Course Not Found">
         <Alert severity="error" sx={{ m: 3 }}>
-          Course not found or you don't have access to it.
+          Course not found or you don&apos;t have access to it.
         </Alert>
       </DashboardLayout>
     );

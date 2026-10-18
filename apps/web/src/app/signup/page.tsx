@@ -50,7 +50,7 @@ export default function SignupPage() {
     setLoading(true);
     setMsg('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
       const res = await axios.post(`${apiUrl}/auth/signup`, { 
         email, 
         password,

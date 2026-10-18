@@ -3,31 +3,25 @@
   "version": "1.0.0",
   "private": true,
   "description": "Champius Learning Management System - Full-stack application with NestJS backend and Next.js frontend",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/champius.git"
-  },
   "scripts": {
-    "verify": "node verify-deployment.js",
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
-    "dev:api": "cd apps/api && npm run start:dev",
-    "dev:web": "cd apps/web && pnpm dev",
+    "install:all": "npm install && npm install --prefix apps/api && npm install --prefix apps/web",
+    "db:up": "docker compose up -d",
+    "dev": "concurrently -n api,web \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run start:dev --prefix apps/api",
+    "dev:web": "npm run dev --prefix apps/web",
     "build": "npm run build:api && npm run build:web",
-    "build:api": "cd apps/api && npm install && npx prisma generate && npm run build",
-    "build:web": "cd apps/web && pnpm install && pnpm build",
-    "start": "concurrently \"npm run start:api\" \"npm run start:web\"",
-    "start:api": "cd apps/api && npm run start:prod",
-    "start:web": "cd apps/web && pnpm start",
-    "prisma:generate": "cd apps/api && npx prisma generate",
-    "prisma:migrate": "cd apps/api && npx prisma migrate deploy",
-    "prisma:studio": "cd apps/api && npx prisma studio",
+    "build:api": "npm run build --prefix apps/api",
+    "build:web": "npm run build --prefix apps/web",
+    "start": "concurrently -n api,web \"npm run start:api\" \"npm run start:web\"",
+    "start:api": "npm run start:prod --prefix apps/api",
+    "start:web": "npm run start --prefix apps/web",
+    "prisma:generate": "npm run prisma:generate --prefix apps/api",
+    "prisma:migrate": "npm run prisma:migrate --prefix apps/api",
+    "prisma:studio": "npm run prisma:studio --prefix apps/api",
     "lint": "npm run lint:api && npm run lint:web",
-    "lint:api": "cd apps/api && npm run lint",
-    "lint:web": "cd apps/web && pnpm lint"
+    "lint:api": "npm run lint --prefix apps/api",
+    "lint:web": "npm run lint --prefix apps/web"
   },
-  "workspaces": [
-    "apps/*"
-  ],
   "keywords": [
     "lms",
     "learning-management-system",
@@ -37,11 +31,11 @@
     "prisma",
     "postgresql"
   ],
-  "author": "Your Name",
+  "author": "Samin Zaman",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

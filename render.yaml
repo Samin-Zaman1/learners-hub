@@ -5,7 +5,7 @@ services:
     region: oregon
     plan: starter
     rootDir: apps/api
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npx prisma migrate deploy && npm run start:prod
     healthCheckPath: /api/health
     envVars:
@@ -17,10 +17,19 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      # Comma-separated frontend URLs, e.g. https://champius.vercel.app
       - key: CLIENT_ORIGIN
-        value: https://your-app.vercel.app
-      - key: PORT
-        value: 4000
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
 
 databases:
   - name: champius-db

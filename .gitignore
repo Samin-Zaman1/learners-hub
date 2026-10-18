@@ -31,3 +31,11 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# Dependencies & build output
+node_modules/
+dist/
+.next/
+
+# Archives (design exports etc.)
+*.zip

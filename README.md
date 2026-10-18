@@ -1,224 +1,96 @@
 # Champius - Learning Management System
 
-A modern, full-stack Learning Management System built with NestJS, Next.js, Prisma, and PostgreSQL.
+A full-stack learning management system for students, instructors and admins: courses, tasks and grading, schedules, announcements and course materials.
 
-## 🚀 Quick Start
+| | Stack |
+|---|---|
+| API (`apps/api`) | NestJS, Prisma, PostgreSQL, JWT auth |
+| Web (`apps/web`) | Next.js 15, React 19, MUI 7, TanStack Query, Axios |
 
-### Prerequisites
-- Node.js 18+ and npm/pnpm
-- PostgreSQL database
-- Git
+## Local development
 
-### Local Development
+Prerequisites: Node.js 20+, npm, Docker.
 
-1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
-cd Champius
-```
+# 1. Install dependencies (root, api and web are separate npm projects)
+npm run install:all
 
-2. **Install dependencies**
-```bash
-# Install root dependencies
-npm install
+# 2. Start Postgres (and MailHog for email) in Docker
+npm run db:up
 
-# Install API dependencies
-cd apps/api
-npm install
-
-# Install Web dependencies
-cd ../web
-pnpm install
-```
-
-3. **Set up environment variables**
-```bash
-# Backend (.env in apps/api/)
+# 3. Configure environment
 cp apps/api/.env.example apps/api/.env
-# Edit apps/api/.env with your database credentials
-
-# Frontend (.env.local in apps/web/)
 cp apps/web/.env.example apps/web/.env.local
-# Edit with your API URL (http://localhost:4000 for local)
-```
 
-4. **Run database migrations**
-```bash
+# 4. Apply migrations and (optionally) seed sample data
 cd apps/api
 npx prisma migrate dev
-npx prisma generate
-```
+npm run seed
+cd ../..
 
-5. **Start development servers**
-```bash
-# From project root
+# 5. Run both apps
 npm run dev
-
-# Or start individually:
-npm run dev:api   # Backend on http://localhost:4000
-npm run dev:web   # Frontend on http://localhost:3000
 ```
 
-## 📦 Project Structure
+- Web: http://localhost:3000
+- API: http://localhost:4000/api (health check: `/api/health`)
+- MailHog inbox: http://localhost:8025
+
+To create an admin user:
+
+```bash
+cd apps/api
+ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='choose-a-password' npx ts-node create-admin.ts
+```
+
+## Project structure
 
 ```
 Champius/
 ├── apps/
-│   ├── api/                 # NestJS Backend
-│   │   ├── prisma/         # Database schema & migrations
-│   │   ├── src/            # Source code
-│   │   └── package.json
-│   └── web/                 # Next.js Frontend
-│       ├── src/            # Source code
-│       ├── public/         # Static assets
-│       └── package.json
-├── railway.json            # Railway deployment config
-├── render.yaml             # Render deployment config
-├── vercel.json             # Vercel deployment config
-└── package.json            # Root package.json
+│   ├── api/                # NestJS API
+│   │   ├── prisma/         # schema, migrations, seed
+│   │   └── src/            # admin/, instructor/, student/, dashboard/ modules
+│   └── web/                # Next.js app (src/app routes, src/components, src/hooks)
+├── docs/                   # deployment and reference docs
+├── docker-compose.yml      # local Postgres + MailHog
+└── render.yaml             # API deployment (Render Blueprint)
 ```
 
-## 🌐 Production Deployment
+## Environment variables
 
-**This project is production-ready and can be deployed in minutes!**
+**API** (`apps/api/.env`); see [`.env.example`](apps/api/.env.example):
 
-### Frontend (Vercel)
-1. Push code to GitHub
-2. Import project to [Vercel](https://vercel.com)
-3. Set environment variable: `NEXT_PUBLIC_API_URL`
-4. Deploy
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Postgres connection string |
+| `JWT_SECRET` | Token signing secret (required in production) |
+| `CLIENT_ORIGIN` | Allowed frontend origins, comma-separated |
+| `PORT` | Defaults to 4000 |
+| `SMTP_*` | Optional outgoing email |
 
-### Backend (Railway - Recommended)
-1. Create account at [Railway.app](https://railway.app)
-2. Deploy from GitHub repository
-3. Add PostgreSQL database
-4. Set environment variables
-5. Deploy
+**Web** (`apps/web/.env.local`):
 
-**📖 Detailed Guides:**
-- [Complete Deployment Guide](COMPLETE_DEPLOYMENT_GUIDE.md) - Full step-by-step instructions
-- [Backend Deployment](BACKEND_DEPLOYMENT_GUIDE.md) - Railway, Render, Docker options
-- [Vercel Deployment](VERCEL_DEPLOYMENT.md) - Frontend deployment
-- [Deployment Checklist](DEPLOYMENT_CHECKLIST.md) - Pre-flight checks
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | API base URL **including `/api`**, e.g. `http://localhost:4000/api` |
 
-## 🛠️ Tech Stack
+## Commands
 
-### Backend
-- **Framework**: NestJS
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Authentication**: JWT
-- **Validation**: class-validator
+Run from the repo root:
 
-### Frontend
-- **Framework**: Next.js 15
-- **UI Library**: Material-UI (MUI)
-- **State Management**: React Query
-- **HTTP Client**: Axios
-- **Styling**: Emotion
+| Command | What it does |
+|---|---|
+| `npm run dev` | API and web in watch mode |
+| `npm run build` | Production build of both apps (web build type-checks and lints) |
+| `npm run lint` | Lint both apps |
+| `npm run prisma:migrate` | Apply pending migrations (`migrate deploy`) |
+| `npm run prisma:studio` | Browse the database |
 
-## 📚 Features
+## Deployment
 
-- 👤 User Authentication (Students & Instructors)
-- 📚 Course Management
-- 📝 Assignment & Task Management
-- 📊 Dashboard Analytics
-- 📢 Announcements
-- 👥 Attendance Tracking
-- 📅 Calendar & Scheduling
-- 📎 Material Management
-- 🎯 Grade Tracking
+API on Render, web on Vercel. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-## 🔐 Environment Variables
+## License
 
-### Backend (apps/api/.env)
-```env
-NODE_ENV=production
-DATABASE_URL=postgresql://user:pass@host:5432/db
-JWT_SECRET=your-32-char-secret
-CLIENT_ORIGIN=https://your-frontend.vercel.app
-PORT=4000
-```
-
-### Frontend (apps/web/.env.local or Vercel)
-```env
-NEXT_PUBLIC_API_URL=https://your-api.railway.app/api
-```
-
-## 🧪 Testing
-
-```bash
-# Backend tests
-cd apps/api
-npm test
-
-# Frontend build test
-cd apps/web
-pnpm build
-```
-
-## 📝 API Documentation
-
-API runs on `/api` prefix:
-- Health Check: `GET /api/health`
-- Authentication: `POST /api/auth/login`, `POST /api/auth/register`
-- Protected routes require `Authorization: Bearer <token>` header
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-**Deployment Issues?** Check:
-1. [COMPLETE_DEPLOYMENT_GUIDE.md](COMPLETE_DEPLOYMENT_GUIDE.md)
-2. [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
-3. Platform logs (Railway/Vercel dashboard)
-
-**Common Issues:**
-- CORS errors → Update `CLIENT_ORIGIN` in backend
-- Database errors → Check `DATABASE_URL` format
-- Build errors → Run `npm run build` locally first
-
-## ⚡ Quick Commands
-
-```bash
-# Build everything
-npm run build
-
-# Start production locally
-npm start
-
-# Database operations
-npm run prisma:generate
-npm run prisma:migrate
-npm run prisma:studio
-
-# Linting
-npm run lint
-```
-
-## 🎯 Production Status
-
-✅ **Deployment Ready**
-- All deployment configurations included
-- Production environment variables documented
-- Health checks implemented
-- Error handling configured
-- CORS properly set up
-- Database migrations automated
-- Build scripts optimized
-
-**Deploy now**: Follow [COMPLETE_DEPLOYMENT_GUIDE.md](COMPLETE_DEPLOYMENT_GUIDE.md)
-
----
-
-**Made with ❤️ by the Champius Team**
+MIT

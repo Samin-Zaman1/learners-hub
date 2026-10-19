@@ -18,6 +18,8 @@
     "prisma:generate": "npm run prisma:generate --prefix apps/api",
     "prisma:migrate": "npm run prisma:migrate --prefix apps/api",
     "prisma:studio": "npm run prisma:studio --prefix apps/api",
+    "test": "npm run test --prefix apps/api",
+    "test:cov": "npm run test:cov --prefix apps/api",
     "lint": "npm run lint:api && npm run lint:web",
     "lint:api": "npm run lint --prefix apps/api",
     "lint:web": "npm run lint --prefix apps/web"

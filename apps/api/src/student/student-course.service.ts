@@ -103,9 +103,9 @@ export class StudentCourseService {
       throw new BadRequestException('Invalid invitation code format');
     }
 
-    // Find course by code
+    // Find course by invitation code
     const course = await this.prisma.course.findUnique({
-      where: { code: code },
+      where: { invitationCode: code },
       include: {
         _count: {
           select: {

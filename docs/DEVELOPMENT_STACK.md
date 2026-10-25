@@ -41,7 +41,6 @@
 
 ### Development Tools
 - **TypeScript** v5.9.2 - Type-safe JavaScript
-- **Jest** v30.1.2 - Testing framework
 - **ESLint** v9.34.0 - Linting
 - **Prettier** v3.6.2 - Code formatting
 - **ts-node** v10.9.2 - TypeScript execution
@@ -318,20 +317,6 @@ NEXT_PUBLIC_APP_VERSION="1.0.0"
 - **Type Safety** - Full TypeScript coverage
 - **SQL Injection Prevention** - Prisma parameterized queries
 - **Cookie Security** - HttpOnly, Secure flags
-
----
-
-## 🧪 Testing Stack
-
-### Backend Testing
-- **Jest** - Unit testing framework
-- **Supertest** - HTTP assertion library
-- **ts-jest** - TypeScript preprocessor
-- E2E testing configuration
-
-### Coverage
-- Test coverage reporting with Jest
-- Coverage directory: `coverage/`
 
 ---
 

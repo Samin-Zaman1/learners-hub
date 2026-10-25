@@ -1,10 +1,6 @@
 # Learners Hub - Learning Management System
 
-[![Tests](https://github.com/Samin-Zaman1/learners-hub/actions/workflows/tests.yml/badge.svg)](https://github.com/Samin-Zaman1/learners-hub/actions/workflows/tests.yml)
-
 A full-stack learning management system for students, instructors and admins: courses, tasks and grading, schedules, announcements and course materials.
-
-Learners Hub doubles as a QA portfolio project: it's being tested layer by layer, from unit tests up to end-to-end browser tests. See [TESTING.md](TESTING.md) for the strategy, coverage and defects found.
 
 | | Stack |
 |---|---|
@@ -56,7 +52,6 @@ learners-hub/
 │   │   ├── prisma/         # schema, migrations, seed
 │   │   └── src/            # admin/, instructor/, student/, dashboard/ modules
 │   └── web/                # Next.js app (src/app routes, src/components, src/hooks)
-├── .github/workflows/      # CI: runs the test suite
 ├── docs/                   # deployment and reference docs
 ├── docker-compose.yml      # local Postgres + MailHog
 └── render.yaml             # API deployment (Render Blueprint)
@@ -88,15 +83,9 @@ Run from the repo root:
 |---|---|
 | `npm run dev` | API and web in watch mode |
 | `npm run build` | Production build of both apps (web build type-checks and lints) |
-| `npm test` | API unit tests |
-| `npm run test:cov` | API unit tests with a coverage report |
 | `npm run lint` | Lint both apps |
 | `npm run prisma:migrate` | Apply pending migrations (`migrate deploy`) |
 | `npm run prisma:studio` | Browse the database |
-
-## Testing
-
-Unit tests run on every push and pull request in GitHub Actions. [TESTING.md](TESTING.md) covers the test strategy, what each suite checks, the techniques used, defects found, and what comes next (API integration, database and Playwright end-to-end tests).
 
 ## Deployment
 

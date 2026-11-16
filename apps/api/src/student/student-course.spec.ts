@@ -112,6 +112,33 @@ describe('studentCourseService', () => {
                 enrollmentCount: 25,              // from _count.Enrollment
                 materialCount: 8                  // from _count.CourseMaterial
             })
+
+        })
+              it('should show Unknown when the course has no instructor', async() => {
+            // Arrange: every field the code reads on lines 80-96
+            fakePrisma.course.findUnique.mockResolvedValue(
+                {
+                    status: "ACTIVE",
+                    id: "course 1",
+                    title: "Math",
+                    code: "MATH101",
+                    description: "Intro to algebra",
+                    color: "#667eea",
+                    credits: 3,
+                    semester: "Fall 2026",
+                    level: "Beginner",
+                    _count: { Enrollment: 25, CourseMaterial: 8 }
+                }
+            )
+
+            // Act: no expect() around it, because it doesn't throw
+            const result = await service.previewCourseByCode('ABCD-2345')
+
+            // Assert: field names from the left side of the return
+            expect(result).toMatchObject({
+                instructor:  'Unknown',        
+            })
+
         })
     })
 });

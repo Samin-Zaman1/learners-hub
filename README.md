@@ -87,6 +87,26 @@ Run from the repo root:
 | `npm run prisma:migrate` | Apply pending migrations (`migrate deploy`) |
 | `npm run prisma:studio` | Browse the database |
 
+## API testing (Postman)
+
+The [`postman/`](postman/) folder has collections covering every API area (131 requests):
+
+| Collection | Covers | Requests |
+|---|---|---|
+| `1-auth-health` | Health check, login for each role, signup, profile, change password | 11 |
+| `2-student` | Tasks and submissions, enrolling by invitation code, semesters, schedule | 19 |
+| `3-instructor` | Courses, students and invitations, tasks, grading, schedule and templates, announcements, modules, materials, calendar | 56 |
+| `4-admin` | Stats, users, courses, enrollments | 16 |
+| `5-dashboard` | Tasks, schedule, announcements, enrollments, activities, courses | 29 |
+
+**How to run them**
+
+1. Start the API locally (see [Local development](#local-development)).
+2. In Postman, import every file in `postman/`, including `learners-hub-local.postman_environment.json`, and select the **Learners Hub - Local** environment.
+3. Fill in the email and password variables for each role (from your seeded data or `create-admin.ts`).
+4. Run the login requests in `1-auth-health` first. They save each role's token into the environment, and the other collections use those tokens automatically.
+5. Run requests one by one or with the Collection Runner. IDs such as `courseId` and `taskId` are stored in environment variables, so fill them in as you create data.
+
 ## Deployment
 
 API on Render, web on Vercel. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).

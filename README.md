@@ -89,7 +89,9 @@ Run from the repo root:
 
 ## API testing (Postman)
 
-The [`postman/`](postman/) folder has collections covering every API area (131 requests):
+**[View the collections in Postman](https://www.postman.com/samins-pm-coll/workspace/samin-s-pm-coll-workspace)** (public workspace, no download needed)
+
+The same collections are also in the [`postman/`](postman/) folder and cover every API area (131 requests):
 
 | Collection | Covers | Requests |
 |---|---|---|

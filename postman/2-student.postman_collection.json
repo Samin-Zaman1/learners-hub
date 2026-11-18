@@ -1,0 +1,425 @@
+{
+  "info": {
+    "_postman_id": "180d2e7c-695a-441c-8ed1-2f9242ab600a",
+    "name": "2. Student",
+    "description": "Uses {{studentToken}}. Log in as Student first (collection 1).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "List my tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Task statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/tasks/statistics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "tasks",
+                "statistics"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upcoming tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/tasks/upcoming",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "tasks",
+                "upcoming"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get one submission",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/tasks/{{submissionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "tasks",
+                "{{submissionId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update submission",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/student/tasks/{{submissionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "tasks",
+                "{{submissionId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"progress\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "Enrolled courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/enrolled",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "enrolled"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Preview course by code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/preview/{{invitationCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "preview",
+                "{{invitationCode}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Enroll with code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courses/enroll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "enroll"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invitationCode\": \"{{invitationCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Course details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unenroll",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/{{courseId}}/unenroll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "{{courseId}}",
+                "unenroll"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Semesters",
+      "item": [
+        {
+          "name": "List semesters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/semesters/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "semesters",
+                "list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Semester statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/semesters/statistics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "semesters",
+                "statistics"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Available courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/semesters/available",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "semesters",
+                "available"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Semester upcoming tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/semesters/upcoming-tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "semesters",
+                "upcoming-tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Courses in a semester",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/semesters/{{semester}}/courses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courses",
+                "semesters",
+                "{{semester}}",
+                "courses"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schedule",
+      "item": [
+        {
+          "name": "My schedule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/schedule?",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "schedule"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-11-01",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-30",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Today",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/schedule/today",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "schedule",
+                "today"
+              ]
+            }
+          }
+        },
+        {
+          "name": "This week",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/schedule/week",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "schedule",
+                "week"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upcoming events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/student/schedule/upcoming?days=7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "student",
+                "schedule",
+                "upcoming"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7",
+                  "disabled": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{studentToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 
-import { Body, Controller, Get, Post, Patch, Inject, UseGuards, Req, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, Patch, Inject, UseGuards, Req, Request, UnauthorizedException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -24,20 +24,19 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: { email: string; password: string; role?: string }) {
     const user = await prisma.user.findUnique({ where: { email: body.email } });
-    if (!user) return { ok: false, message: 'Invalid credentials' };
-    if (!user.verified) return { ok: false, message: 'Email not verified' };
+    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user.verified) throw new ForbiddenException('Email not verified');
     
     // Verify password first
     const ok = await bcrypt.compare(body.password, user.passwordHash);
-    if (!ok) return { ok: false, message: 'Invalid credentials' };
+    if (!ok) throw new UnauthorizedException('Invalid credentials');
     
     // If role is provided in request, validate it matches (backward compatibility)
     // Otherwise, use the role from database (auto-detect)
     if (body.role && user.role !== body.role) {
-      return { 
-        ok: false, 
-        message: `This account is registered as ${user.role.toLowerCase()}. Please select the correct role or leave it blank.` 
-      };
+      throw new UnauthorizedException(
+        `This account is registered as ${user.role.toLowerCase()}. Please select the correct role or leave it blank.`
+      );
     }
     
     // Generate JWT token with role information from database
@@ -64,7 +63,7 @@ export class AuthController {
     role: 'STUDENT' | 'INSTRUCTOR' 
   }) {
     const existing = await prisma.user.findUnique({ where: { email: body.email } });
-    if (existing) return { ok: false, message: 'Email already in use' };
+    if (existing) throw new ConflictException('Email already in use');
     
     const passwordHash = await bcrypt.hash(body.password, 10);
     
@@ -112,7 +111,7 @@ export class AuthController {
     });
     
     if (!user) {
-      return { ok: false, message: 'User not found' };
+      throw new UnauthorizedException('User not found');
     }
     
     console.log('/auth/me returning user:', user);

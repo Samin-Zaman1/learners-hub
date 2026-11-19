@@ -16,6 +16,7 @@ import {
   Avatar 
 } from '@mui/material';
 import axios from 'axios';
+import { getApiErrorMessage } from '@/lib/api';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -58,8 +59,8 @@ export default function SignupPage() {
       });
       if (res.data.ok) setMsg('Signup successful! You can now log in.');
       else setMsg(res.data.message || 'Signup failed');
-    } catch {
-      setMsg('Signup failed');
+    } catch (error: unknown) {
+      setMsg(getApiErrorMessage(error, 'Signup failed'));
     } finally {
       setLoading(false);
     }

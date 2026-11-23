@@ -49,9 +49,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       method: request.method,
       message,
       ...(errors && { errors }),
-      ...(process.env.NODE_ENV !== 'production' && {
-        stack: exception instanceof Error ? exception.stack : undefined,
-      }),
+      // Stack only for unexpected 5xx errors, and never in production
+      ...(process.env.NODE_ENV !== 'production' &&
+        status >= 500 &&
+        exception instanceof Error && { stack: exception.stack }),
     });
   }
 }
